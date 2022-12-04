@@ -3,9 +3,11 @@ from src.parser import Parser
 from src.interpreter import Interpreter
 from src.errors import Context
 from src.symbol_table import SymbolTable
-from src.types import Null
+import src.types as types
 
 global_symbol_table = SymbolTable()
+
+types.register_var(global_symbol_table)
 
 def run(fn, text):
     lexer = Lexer(fn, text)
@@ -21,6 +23,4 @@ def run(fn, text):
     context.symbol_table = global_symbol_table
     result = interpreter.visit(ast.node, context)
     
-    # if isinstance(result.value, Null):
-    #     return "null", result.error
     return result.value, result.error
