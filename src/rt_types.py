@@ -23,6 +23,7 @@ TT_LTE = "LTE"
 TT_GTE = "GTE"
 TT_COMMA = "COMMA"
 TT_ARROW = "ARROW"
+TT_NEWLINE = "NEWLINE"
 TT_EOF = "EOF"
 
 DIGITS = '0123456789'
@@ -52,6 +53,7 @@ class keyWordsClass:
         self.STEP = "STEP"
         self.WHILE = "WHILE"
         self.FUNCTION = "FUNC"
+        self.END = "END"
 
 KEYWORDS = keyWordsClass()
 
@@ -71,5 +73,6 @@ KEYWORDS_LIST = [
     KEYWORDS.TO,
     KEYWORDS.STEP,
     KEYWORDS.WHILE,
-    KEYWORDS.FUNCTION
+    KEYWORDS.FUNCTION,
+    KEYWORDS.END
 ]

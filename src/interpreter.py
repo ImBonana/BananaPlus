@@ -121,21 +121,22 @@ class Interpreter:
     def visit_IfNode(self, node, context):
         res = RTResult()
 
-        for condition, expr in node.cases:
+        for condition, expr, should_return_null in node.cases:
             condition_value = res.register(self.visit(condition, context))
             if res.error: return res
             
             if condition_value.is_true():
                 expr_value = res.register(self.visit(expr, context))
                 if res.error: return res
-                return res.success(expr_value)
+                return res.success(Null() if should_return_null else expr_value)
 
         if node.else_case:
-            else_value = res.register(self.visit(node.else_case, context))
+            expr, should_return_null = node.else_case
+            expr_value = res.register(self.visit(expr, context))
             if res.error: return res
-            return res.success(else_value)
+            return res.success(Null() if should_return_null else expr_value)
 
-        return res.success(None)
+        return res.success(Null())
 
     def visit_ForNode(self, node, context):
         res = RTResult()
@@ -168,6 +169,7 @@ class Interpreter:
             if res.error: return res
 
         return res.success(
+            Null() if node.should_return_null else
             List(elements).set_context(context).set_pos(node.pos_start, node.pos_end)
         )
 
@@ -185,6 +187,7 @@ class Interpreter:
             if res.error: return res
 
         return res.success(
+            Null() if node.should_return_null else
             List(elements).set_context(context).set_pos(node.pos_start, node.pos_end)
         )
 
@@ -194,7 +197,7 @@ class Interpreter:
         func_name = node.var_name_tok.value if node.var_name_tok else None
         body_node = node.body_node
         arg_names = [arg_name.value for arg_name in node.arg_name_toks]
-        func_value = Function(func_name, body_node, arg_names).set_context(context).set_pos()
+        func_value = Function(func_name, body_node, arg_names, node.should_return_null).set_context(context).set_pos()
 
         if node.var_name_tok:
             context.symbol_table.set(func_name, func_value)

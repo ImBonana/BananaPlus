@@ -25,6 +25,9 @@ class Lexer:
         while self.current_char != None:
             if self.current_char in ' \t':
                 self.advance()
+            elif self.current_char in ";\n":
+                tokens.append(Token(TT_NEWLINE, pos_start=self.pos))
+                self.advance()
             elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
             elif self.current_char in LETTERS:
@@ -192,7 +195,7 @@ class Lexer:
                         if isinstance(result.value, String):
                             string += result.value.value
                         else:
-                            string += str(result.value)
+                            string += "".join([str(i) for i in result.value.elements]) 
                     in_code = False
                     code = ''
                 else:
