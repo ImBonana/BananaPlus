@@ -54,6 +54,9 @@ class keyWordsClass:
         self.WHILE = "WHILE"
         self.FUNCTION = "FUNC"
         self.END = "END"
+        self.RETURN = "RETURN"
+        self.CONTINUE = "CONTINUE"
+        self.BREAK = "BREAK"
 
 KEYWORDS = keyWordsClass()
 
@@ -74,5 +77,8 @@ KEYWORDS_LIST = [
     KEYWORDS.STEP,
     KEYWORDS.WHILE,
     KEYWORDS.FUNCTION,
-    KEYWORDS.END
+    KEYWORDS.END,
+    KEYWORDS.RETURN,
+    KEYWORDS.CONTINUE,
+    KEYWORDS.BREAK
 ]

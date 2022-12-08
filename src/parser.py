@@ -38,7 +38,7 @@ class Parser:
             res.register_advancement()
             self.advance()
 
-        statement = res.register(self.expr())
+        statement = res.register(self.statement())
         if res.error: return res
         statements.append(statement)
 
@@ -54,7 +54,7 @@ class Parser:
                 more_statements = False
 
             if not more_statements: break
-            statement = res.try_register(self.expr())
+            statement = res.try_register(self.statement())
             if not statement:
                 self.reverse(res.to_reverse_count)
                 more_statements = False
@@ -66,6 +66,39 @@ class Parser:
             pos_start,
             self.current_tok.pos_end.copy()
         ))
+
+    def statement(self):
+        res = ParseResult()
+        pos_start = self.current_tok.pos_start.copy()
+
+        if self.current_tok.matches(TT_KEYWORD, KEYWORDS.RETURN):
+            res.register_advancement()
+            self.advance()
+
+            expr = res.try_register(self.expr())
+
+            if not expr:
+                self.reverse(res.to_reverse_count)
+            return res.success(ReturnNode(expr, pos_start, self.current_tok.pos_start.copy()))
+
+        if self.current_tok.matches(TT_KEYWORD, KEYWORDS.CONTINUE):
+            res.register_advancement()
+            self.advance()
+            return res.success(ContinueNode(pos_start, self.current_tok.pos_start.copy()))
+        
+        if self.current_tok.matches(TT_KEYWORD, KEYWORDS.BREAK):
+            res.register_advancement()
+            self.advance()
+            return res.success(BreakNode(pos_start, self.current_tok.pos_start.copy()))
+
+        expr = res.register(self.expr())
+        if res.error:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                f"Expected '{KEYWORDS.RETURN}', '{KEYWORDS.CONTINUE}', '{KEYWORDS.BREAK}', '{KEYWORDS.VAR}', '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}' 'int, float, boolean, identifier, '+', '-', '(', '[' or '{KEYWORDS.NOT}'"
+            ))
+
+        return res.success(expr)
 
     def func_def(self):
         res = ParseResult()
@@ -145,7 +178,7 @@ class Parser:
                 var_name_tok,
                 arg_name_toks,
                 body,
-                False
+                True
             ))
 
         if self.current_tok.type != TT_NEWLINE:
@@ -173,7 +206,7 @@ class Parser:
             var_name_tok,
             arg_name_toks,
             body,
-            True
+            False
         ))
 
     def if_expr(self):
@@ -645,7 +678,7 @@ class Parser:
         if res.error: 
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                f"Expected 'int, float, boolean, identifier, '+', '-', '(' or '['"
+                f"Expected '{KEYWORDS.VAR}', '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}' 'int, float, boolean, identifier, '+', '-', '(', '[' or '{KEYWORDS.NOT}'"
             ))
 
         return res.success(node)
