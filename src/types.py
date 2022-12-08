@@ -209,7 +209,7 @@ class Boolean(Type):
         return copy
 
     def __repr__(self):
-        return str(self.value)
+        return f"{KEYWORDS.__dict__[str(self.value).upper()]}"
 
 class Null(Type):
     def __init__(self):
@@ -632,4 +632,4 @@ def register_var(global_symbol_table):
     global_symbol_table.set("pop", BuiltInFunction.pop)
     global_symbol_table.set("extend", BuiltInFunction.extend)
     global_symbol_table.set("len", BuiltInFunction.len)
-    global_symbol_table.set("import", BuiltInFunction._import)
+    global_symbol_table.set("import", BuiltInFunction.import_)

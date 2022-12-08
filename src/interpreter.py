@@ -19,7 +19,7 @@ class Interpreter:
         return RTResult().success(String(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
 
     def visit_BooleanNode(self, node, context):
-        return RTResult().success(Boolean(node.tok.value).set_context(context).set_pos(node.pos_start, node.pos_end))
+        return RTResult().success(Boolean(node.value).set_context(context).set_pos(node.pos_start, node.pos_end))
 
     def visit_NullNode(self, node, context):
         return RTResult().success(Null().set_context(context).set_pos(node.pos_start, node.pos_end))

@@ -26,25 +26,18 @@ class ListNode:
 
 		self.pos_start = pos_start
 		self.pos_end = pos_end
+
 class BooleanNode:
-	def __init__(self, tok):
-		self.tok = tok
+	def __init__(self, value, pos_start, pos_end):
+		self.value = value
 
-		self.pos_start = self.tok.pos_start
-		self.pos_end = self.tok.pos_end
-
-	def __repr__(self):
-		return f'{KEYWORDS.__dict__[str(self.tok).upper().replace("KEYWORD:", "")]}'
+		self.pos_start = pos_start
+		self.pos_end = pos_end
 
 class NullNode:
-	def __init__(self, tok):
-		self.tok = tok
-
-		self.pos_start = self.tok.pos_start
-		self.pos_end = self.tok.pos_end
-
-	def __repr__(self):
-		return 'null'
+	def __init__(self, pos_start, pos_end):
+		self.pos_start = pos_start
+		self.pos_end = pos_end
 
 class VarAccessNode:
 	def __init__(self, var_name_tok):

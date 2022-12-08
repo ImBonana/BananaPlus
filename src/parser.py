@@ -515,15 +515,15 @@ class Parser:
         elif tok.matches(TT_KEYWORD, KEYWORDS.NULL):
             res.register_advancement()
             self.advance()
-            return res.success(NullNode(tok))
+            return res.success(NullNode(tok.pos_start, tok.pos_end))
         elif tok.matches(TT_KEYWORD, KEYWORDS.TRUE):
             res.register_advancement()
             self.advance()
-            return res.success(BooleanNode(tok))
+            return res.success(BooleanNode(True, tok.pos_start, tok.pos_end))
         elif tok.matches(TT_KEYWORD, KEYWORDS.FALSE):
             res.register_advancement()
             self.advance()
-            return res.success(BooleanNode(tok))
+            return res.success(BooleanNode(False, tok.pos_start, tok.pos_end))
         elif tok.type == TT_IDENTIFIER:
             res.register_advancement()
             self.advance()
