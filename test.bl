@@ -1,9 +1,0 @@
-VAR a = "hey"
-
-IF is_string(a) == true THEN
-    print("Is A String")
-ELIF is_number(a) THEN
-    print("Is A Number")
-ELSE
-    print("Fuck You")
-END
