@@ -542,6 +542,61 @@ class BuiltInFunction(BaseFunction):
         return RTResult().success(Null())
     execute_extend.arg_names = ["listA", "listB"]
 
+    def execute_len(self, exec_ctx):
+        value = exec_ctx.symbol_table.get("value")
+        
+        leng = -1
+
+        if isinstance(value, List):
+            leng = len(value.elements)
+        elif isinstance(value, String):
+            leng = len(value.value)
+        else:
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "Argument must be list or string",
+                exec_ctx
+            ))
+
+        return RTResult().success(Number(leng))
+    execute_len.arg_names = ["value"]
+
+    def execute_import(self, exec_ctx):
+        fn = exec_ctx.symbol_table.get("fn")
+
+        if not isinstance(fn, String):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "Argument must be string",
+                exec_ctx
+            ))
+
+        fn = fn.value
+
+        try:
+            with open(fn, "r") as f:
+                script = f.read()
+        except Exception as e:
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                F"Failed to load script \"{fn}\"\n" + str(e),
+                exec_ctx
+            ))
+        
+        from BananaLang import run
+
+        _, error = run(fn, script)
+
+        if error:
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                f"Failed to finish executing script \"{fn}\"\n" + error.as_string(),
+                exec_ctx
+            ))
+
+        return RTResult().success(Null())
+    execute_import.arg_names = ["fn"]
+
 BuiltInFunction.print = BuiltInFunction("print")
 BuiltInFunction.input = BuiltInFunction("input")
 BuiltInFunction.input_int = BuiltInFunction("input_int")
@@ -555,6 +610,8 @@ BuiltInFunction.is_function = BuiltInFunction("is_function")
 BuiltInFunction.append = BuiltInFunction("append")
 BuiltInFunction.pop = BuiltInFunction("pop")
 BuiltInFunction.extend = BuiltInFunction("extend")
+BuiltInFunction.len = BuiltInFunction("len")
+BuiltInFunction.import_ = BuiltInFunction("import")
 
 Number.math_PI = Number(math.pi)
 
@@ -574,3 +631,5 @@ def register_var(global_symbol_table):
     global_symbol_table.set("append", BuiltInFunction.append)
     global_symbol_table.set("pop", BuiltInFunction.pop)
     global_symbol_table.set("extend", BuiltInFunction.extend)
+    global_symbol_table.set("len", BuiltInFunction.len)
+    global_symbol_table.set("import", BuiltInFunction._import)

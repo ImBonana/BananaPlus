@@ -25,6 +25,11 @@ class Lexer:
         while self.current_char != None:
             if self.current_char in ' \t':
                 self.advance()
+            elif self.current_char == "/":
+                token, error = self.make_slash()
+                if error: return [], error
+                if token != None:
+                    tokens.append(token)
             elif self.current_char in ";\n":
                 tokens.append(Token(TT_NEWLINE, pos_start=self.pos))
                 self.advance()
@@ -34,10 +39,13 @@ class Lexer:
                 tokens.append(self.make_identifier())
             elif self.current_char in ('"', "'"):
                 tokens.append(self.make_string())
-            elif self.current_char == "`":
-                token, error = self.make_f_string()
-                if error: return [], error
-                tokens.append(token)
+            
+            #! f string nor working right now
+            # elif self.current_char == "`":
+            #     token, error = self.make_f_string()
+            #     if error: return [], error
+            #     tokens.append(token)
+            
             elif self.current_char == "+":
                 tokens.append(Token(TT_PLUS, pos_start=self.pos))
                 self.advance()
@@ -87,6 +95,25 @@ class Lexer:
         tokens.append(Token(TT_EOF, pos_start=self.pos))
         return tokens, None
     
+    def skip_comment(self):
+        self.advance()
+
+        while self.current_char != '\n':
+            self.advance()
+
+        self.advance()
+
+    def make_slash(self):
+        pos_start = self.pos.copy()
+
+        self.advance()
+
+        if self.current_char == "/":
+            self.skip_comment()
+            return None, None
+        
+        return None, IllegalCharError(pos_start, self.pos, "'" + self.current_char + "'")
+
     def make_number(self):
         num_str = ''
         dot_count = 0
@@ -130,6 +157,7 @@ class Lexer:
 
         return Token(TT_STRING, string, pos_start, self.pos)
     
+    #! not working right now
     def make_f_string(self):
         string = ''
         pos_start = self.pos.copy()
