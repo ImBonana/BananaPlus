@@ -20,6 +20,9 @@ class Type:
         self.context = context
         return self
 
+    def dotted_to(self, other):
+        return None, self.illegal_operation(other)
+
     def added_to(self, other):
         return None, self.illegal_operation(other)
 
@@ -314,6 +317,74 @@ class List(Type):
             else:
                 list_.append(str(x))
         return f'[{", ".join(list_)}]'
+
+class Object(Type):
+    def __init__(self, elements):
+        super().__init__()
+        self.elements = elements
+    
+    def dotted_to(self, other):
+        if isinstance(other, String):
+            obj = getTupleListValue(self.elements, other, 0, checkValue=True)
+            if obj != None:
+                return obj[1], None
+
+            return None, RTResult().failure(RTError(
+                other.pos_end, other.pos_end,
+                f"{other.value} is not define",
+                self.context
+            ))
+        return None, Type.illegal_operation(self, other)
+
+    def subbed_by(self, other):
+        if isinstance(other, Number):
+            new_object = self.copy()
+            try:
+                new_object.elements.pop(other.value)
+                return new_object, None
+            except:
+                return None, RTError(
+                    other.pos_end, other.pos_end,
+                    "Element at this index could not be removed from object because index is out of bounds.",
+                    self.context
+                )
+
+        return None, Type.illegal_operation(self, other)
+
+    def multed_by(self, other):
+        if isinstance(other, Object):
+            new_object = self.copy()
+            if len(other.elements) <= 0: return new_object, None
+
+            for elem in other.elements:
+                if not isInTupleList(new_object.elements, elem[0], 0, checkValue=True):
+                    new_object.elements.append(elem)
+
+            return new_object, None
+
+        return None, Type.illegal_operation(self, other)
+    def copy(self):
+        copy = Object(self.elements)
+        copy.set_pos(self.pos_start, self.pos_end)
+        copy.set_context(self.context)
+        return copy
+
+    def __repr__(self):
+        string = "{  }"
+        if len(self.elements) > 0:
+            string = "{ "
+            for x in self.elements:
+                string += x[0].value + ": "
+                if isinstance(x[1], String):
+                    string += repr(x[1])
+                elif isinstance(x[1], Object):
+                    string += repr(x[1])
+                else:
+                    string += str(x[1].value)
+                string += ", "
+            string = string[:-2]
+            string += " }"
+        return string
 
 class BaseFunction(Type):
     def __init__(self, name):
@@ -633,3 +704,24 @@ def register_var(global_symbol_table):
     global_symbol_table.set("extend", BuiltInFunction.extend)
     global_symbol_table.set("len", BuiltInFunction.len)
     global_symbol_table.set("import", BuiltInFunction.import_)
+
+
+def isInTupleList(list, obj, index, checkValue=False):
+    for i in list:
+        if checkValue:
+            if i[index].value == obj.value:
+                return True
+        else:   
+            if i[index] == obj: 
+                return True
+    return False
+
+def getTupleListValue(list, obj, index, checkValue=False):
+    for i in list:
+        if checkValue:
+            if i[index].value == obj.value:
+                return i
+        else:   
+            if i[index] == obj: 
+                return i
+    return None

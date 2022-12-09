@@ -25,7 +25,7 @@ class Parser:
 
     def parse(self):
         res = self.statements()
-        if not res.error and self.current_tok.type not in (TT_EOF, TT_KEYWORD):
+        if not res.error and self.current_tok.type not in (TT_EOF, TT_KEYWORD, TT_DOT):
             return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected '+', '-', '*' or '/'"))
         return res
 
@@ -95,7 +95,7 @@ class Parser:
         if res.error:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                f"Expected '{KEYWORDS.RETURN}', '{KEYWORDS.CONTINUE}', '{KEYWORDS.BREAK}', '{KEYWORDS.VAR}', '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}' 'int, float, boolean, identifier, '+', '-', '(', '[' or '{KEYWORDS.NOT}'"
+                f"Expected '{KEYWORDS.RETURN}', '{KEYWORDS.CONTINUE}', '{KEYWORDS.BREAK}', '{KEYWORDS.VAR}', '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}' 'int, float, boolean, identifier, '+', '-', '(', '{'{'}', '[' or '{KEYWORDS.NOT}'"
             ))
 
         return res.success(expr)
@@ -473,7 +473,7 @@ class Parser:
             if res.error:
                 return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
-                    f"Expected ']', '{KEYWORDS.VAR}', '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}', int, float, list, boolean, null, identifier, '+', '-', '(' or '[''"
+                    f"Expected ']', '{KEYWORDS.VAR}', '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}', int, float, list, boolean, null, identifier, '+', '-', '(', '{'{'}' or '['"
                 ))
 
             while self.current_tok.type == TT_COMMA:
@@ -500,6 +500,92 @@ class Parser:
             )
         )
     
+    def object_expr(self):
+        res = ParseResult()
+        elements_nodes = []
+        pos_start = self.current_tok.pos_start.copy()
+
+        if self.current_tok.type != TT_LCURLY:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected '{'"
+            ))
+
+        res.register_advancement()
+        self.advance()
+
+        if self.current_tok.type == TT_RCURLY:
+            res.register_advancement()
+            self.advance()
+        else:
+            if self.current_tok.type != TT_IDENTIFIER:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected identifier"
+                ))
+
+            var_name = self.current_tok
+            
+            res.register_advancement()
+            self.advance()
+
+            if self.current_tok.type != TT_COLON:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    "Expected ':'"
+                ))
+
+            res.register_advancement()
+            self.advance()
+
+            expr = res.register(self.expr())
+            if res.error: 
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    f"Expected '{'}'}', '{KEYWORDS.VAR}', '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}', int, float, list, boolean, null, identifier, '+', '-', '(', '{'{'}' or '['"
+                ))
+            
+            elements_nodes.append((var_name, expr))
+                
+            while self.current_tok.type == TT_COMMA:
+                res.register_advancement()
+                self.advance()
+
+                if self.current_tok.type == TT_IDENTIFIER:
+                    var_name = self.current_tok
+
+                    res.register_advancement()
+                    self.advance()
+
+                    if self.current_tok.type != TT_COLON:
+                        return res.failure(InvalidSyntaxError(
+                            self.current_tok.pos_start, self.current_tok.pos_end,
+                            "Expected ':'"
+                        ))
+
+                    res.register_advancement()
+                    self.advance()
+
+                    expr = res.register(self.expr())
+                    if res.error: return res
+                    elements_nodes.append((var_name, expr))
+
+            if self.current_tok.type != TT_RCURLY:
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    f"Expected ',' or '{'}'}'"
+                ))
+        
+            res.register_advancement()
+            self.advance()
+        
+        return res.success(ObjectNode(
+                elements_nodes,
+                pos_start,
+                self.current_tok.pos_end.copy()
+            )
+        )
+        
     def atom(self):
         res = ParseResult()
         tok = self.current_tok
@@ -508,7 +594,7 @@ class Parser:
             res.register_advancement()
             self.advance()
             return res.success(NumberNode(tok))
-        if tok.type == TT_STRING:
+        elif tok.type == TT_STRING:
             res.register_advancement()
             self.advance()
             return res.success(StringNode(tok))
@@ -543,6 +629,10 @@ class Parser:
             list_expr = res.register(self.list_expr())
             if res.error: return res
             return res.success(list_expr)
+        elif tok.type == TT_LCURLY:
+            object_expr = res.register(self.object_expr())
+            if res.error: return res
+            return res.success(object_expr)
         elif tok.matches(TT_KEYWORD, KEYWORDS.IF):
             if_expr = res.register(self.if_expr())
             if res.error: return res
@@ -560,7 +650,7 @@ class Parser:
             if res.error: return res
             return res.success(func_def)
 
-        return res.failure(InvalidSyntaxError(tok.pos_start, tok.pos_end, f"Expected '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}', int, float, list, boolean, null, identifier, '+', '-', '(' or '['"))
+        return res.failure(InvalidSyntaxError(tok.pos_start, tok.pos_end, f"Expected '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}', int, float, list, boolean, null, identifier, '+', '-', '(', '{'{'}' or '['"))
     
     def call(self):
         res = ParseResult()
@@ -621,8 +711,11 @@ class Parser:
     def term(self):
         return self.bin_op(self.factor, (TT_MUL, TT_DIV))
 
+    def dot(self):
+        return self.bin_op(self.term, (TT_DOT, ))
+
     def arith_expr(self):
-        return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
+        return self.bin_op(self.dot, (TT_PLUS, TT_MINUS))
 
     def comp_expr(self):
         res = ParseResult()
@@ -641,7 +734,7 @@ class Parser:
         if res.error:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                f"Expected '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}', int, float, list, boolean, null, identifier, '+', '-', '(', '[' or '{KEYWORDS.NOT}'"))
+                f"Expected '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}', int, float, list, boolean, null, identifier, '+', '-', '(', '{'{'}', '[' or '{KEYWORDS.NOT}'"))
 
         return res.success(node)
 
@@ -678,7 +771,7 @@ class Parser:
         if res.error: 
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                f"Expected '{KEYWORDS.VAR}', '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}' 'int, float, boolean, identifier, '+', '-', '(', '[' or '{KEYWORDS.NOT}'"
+                f"Expected '{KEYWORDS.VAR}', '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}' 'int, float, boolean, identifier, '+', '-', '(', '{'{'}', '[' or '{KEYWORDS.NOT}'"
             ))
 
         return res.success(node)

@@ -1,4 +1,4 @@
-from src.types import Number, Boolean, Null, Function, String, List
+from src.types import Number, Boolean, Null, Function, String, List, Object
 from src.results import RTResult
 from src.rt_types import *
 from src.errors import RTError
@@ -36,6 +36,18 @@ class Interpreter:
             List(elements).set_context(context).set_pos(node.pos_start, node.pos_end)
         )
 
+    def visit_ObjectNode(self, node, context):
+        res = RTResult()
+        elements = []
+
+        for element in node.element_nodes:
+            elements.append((element[0], res.register(self.visit(element[1], context))))
+            if res.should_return(): return res
+        
+        return res.success(
+            Object(elements).set_context(context).set_pos(node.pos_start, node.pos_end)
+        )
+
     def visit_VarAccessNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
@@ -69,7 +81,9 @@ class Interpreter:
         right = res.register(self.visit(node.right_node, context))
         if res.should_return(): return res
 
-        if node.op_tok.type == TT_PLUS:
+        if node.op_tok.type == TT_DOT:
+            result, error = left.dotted_to(right)
+        elif node.op_tok.type == TT_PLUS:
             result, error = left.added_to(right)
         elif node.op_tok.type == TT_MINUS:
             result, error = left.subbed_by(right)

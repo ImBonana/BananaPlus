@@ -18,6 +18,8 @@ def run(fn, text):
     ast = parser.parse()
     if ast.error: return None, ast.error
 
+    # print(ast.node.element_nodes[0])
+
     interpreter = Interpreter()
     context = Context('<program>')
     context.symbol_table = global_symbol_table
