@@ -7,18 +7,12 @@ class NumberNode:
 		self.pos_start = self.tok.pos_start
 		self.pos_end = self.tok.pos_end
 
-	def __repr__(self):
-		return f'{self.tok}'
-
 class StringNode:
 	def __init__(self, tok):
 		self.tok = tok
 
 		self.pos_start = self.tok.pos_start
 		self.pos_end = self.tok.pos_end
-
-	def __repr__(self):
-		return f'{self.tok}'
 
 class ListNode:
 	def __init__(self, element_nodes, pos_start, pos_end):
@@ -54,12 +48,28 @@ class VarAccessNode:
 		self.pos_end = self.var_name_tok.pos_end
 
 class VarAssignNode:
-	def __init__(self, var_name_tok, value_node):
+	def __init__(self, var_name_tok, value_node, update=False):
 		self.var_name_tok = var_name_tok
 		self.value_node = value_node
+		self.update = update
 
 		self.pos_start = self.var_name_tok.pos_start
 		self.pos_end = self.value_node.pos_end
+
+class MultiVarAssignNode:
+	def __init__(self, var_name_toks, value_node):
+		self.var_name_toks = var_name_toks
+		self.value_node = value_node
+
+		self.pos_start = self.var_name_toks[0][1]
+		self.pos_end = self.value_node.pos_end
+
+class MultiVarAccessNode:
+	def __init__(self, var_name_toks):
+		self.var_name_toks = var_name_toks
+
+		self.pos_start = self.var_name_toks[0][1]
+		self.pos_end = self.var_name_toks[0][2]
 
 class BinOpNode:
 	def __init__(self, left_node, op_tok, right_node):

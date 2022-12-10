@@ -337,32 +337,24 @@ class Object(Type):
         return None, Type.illegal_operation(self, other)
 
     def subbed_by(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, String):
             new_object = self.copy()
-            try:
-                new_object.elements.pop(other.value)
-                return new_object, None
-            except:
-                return None, RTError(
-                    other.pos_end, other.pos_end,
-                    "Element at this index could not be removed from object because index is out of bounds.",
-                    self.context
-                )
-
+            del new_object.elements[other.value]
+            return new_object, None
         return None, Type.illegal_operation(self, other)
 
     def multed_by(self, other):
         if isinstance(other, Object):
             new_object = self.copy()
-            if len(other.elements) <= 0: return new_object, None
+            if len(other.elements.keys()) <= 0: return new_object, None
 
-            for elem in other.elements:
-                if not isInTupleList(new_object.elements, elem[0], 0, checkValue=True):
-                    new_object.elements.append(elem)
+            for k, v in other.elements.items():
+                new_object.elements[k] = v
 
             return new_object, None
 
         return None, Type.illegal_operation(self, other)
+        
     def copy(self):
         copy = Object(self.elements)
         copy.set_pos(self.pos_start, self.pos_end)
@@ -371,16 +363,16 @@ class Object(Type):
 
     def __repr__(self):
         string = "{  }"
-        if len(self.elements) > 0:
+        if len(self.elements.keys()) > 0:
             string = "{ "
-            for x in self.elements:
-                string += x[0].value + ": "
-                if isinstance(x[1], String):
-                    string += repr(x[1])
-                elif isinstance(x[1], Object):
-                    string += repr(x[1])
+            for k, v in self.elements.items():
+                string += k + ": "
+                if isinstance(v, String):
+                    string += repr(v)
+                elif isinstance(v, Object):
+                    string += repr(v)
                 else:
-                    string += str(x[1].value)
+                    string += str(v)
                 string += ", "
             string = string[:-2]
             string += " }"

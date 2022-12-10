@@ -585,7 +585,62 @@ class Parser:
                 self.current_tok.pos_end.copy()
             )
         )
+    
+    def identifier_expr(self):
+        res = ParseResult()
+        pos_start = self.current_tok.pos_start.copy()
+
+        if self.current_tok.type != TT_IDENTIFIER:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected identifier"
+            ))
         
+        var_name = self.current_tok
+
+        res.register_advancement()
+        self.advance()
+
+        if self.current_tok.type == TT_EQ:
+            res.register_advancement()
+            self.advance()
+
+            expr = res.register(self.expr())
+            if res.error: return res
+            return res.success(VarAssignNode(var_name, expr, True))
+        elif self.current_tok.type == TT_DOT:
+            var_names = []
+
+            var_names.append((var_name, self.current_tok.pos_start, self.current_tok.pos_end))
+
+            while self.current_tok.type == TT_DOT:
+                res.register_advancement()
+                self.advance()
+
+                if self.current_tok.type != TT_IDENTIFIER:
+                    return res.failure(InvalidSyntaxError(
+                        self.current_tok.pos_start, self.current_tok.pos_end,
+                        "Expected identifier"
+                    ))
+
+                var_names.append((self.current_tok, self.current_tok.pos_start, self.current_tok.pos_end))
+
+                res.register_advancement()
+                self.advance()
+
+            if self.current_tok.type == TT_EQ:
+                res.register_advancement()
+                self.advance()
+
+                expr = res.register(self.expr())
+                if res.error: return res
+                return res.success(MultiVarAssignNode(var_names, expr))
+            
+            return res.success(MultiVarAccessNode(var_names))
+
+
+        return res.success(VarAccessNode(var_name))
+
     def atom(self):
         res = ParseResult()
         tok = self.current_tok
@@ -611,9 +666,9 @@ class Parser:
             self.advance()
             return res.success(BooleanNode(False, tok.pos_start, tok.pos_end))
         elif tok.type == TT_IDENTIFIER:
-            res.register_advancement()
-            self.advance()
-            return res.success(VarAccessNode(tok))
+            identifier_expr = res.register(self.identifier_expr())
+            if res.error: return res
+            return res.success(identifier_expr)
         elif tok.type == TT_LPAREN:
             res.register_advancement()
             self.advance()
@@ -711,11 +766,11 @@ class Parser:
     def term(self):
         return self.bin_op(self.factor, (TT_MUL, TT_DIV))
 
-    def dot(self):
-        return self.bin_op(self.term, (TT_DOT, ))
-
     def arith_expr(self):
-        return self.bin_op(self.dot, (TT_PLUS, TT_MINUS))
+        return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
+
+    def dot(self):
+        return self.bin_op(self.arith_expr, (TT_DOT, ))
 
     def comp_expr(self):
         res = ParseResult()
@@ -729,7 +784,10 @@ class Parser:
             if res.error: return res
             return res.success(UnaryOpNode(op_tok, node))
 
-        node = res.register(self.bin_op(self.arith_expr, (TT_EE, TT_NE, TT_LT, TT_GT, TT_LTE, TT_GTE)))
+        if self.current_tok.type == TT_IDENTIFIER:
+            node = res.register(self.bin_op(self.dot, (TT_DOT, )))
+        else:
+            node = res.register(self.bin_op(self.arith_expr, (TT_EE, TT_NE, TT_LT, TT_GT, TT_LTE, TT_GTE)))
 
         if res.error:
             return res.failure(InvalidSyntaxError(

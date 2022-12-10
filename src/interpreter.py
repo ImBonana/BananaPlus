@@ -38,12 +38,12 @@ class Interpreter:
 
     def visit_ObjectNode(self, node, context):
         res = RTResult()
-        elements = []
+        elements = {}
 
         for element in node.element_nodes:
-            elements.append((element[0], res.register(self.visit(element[1], context))))
+            elements[element[0].value] = res.register(self.visit(element[1], context))
             if res.should_return(): return res
-        
+
         return res.success(
             Object(elements).set_context(context).set_pos(node.pos_start, node.pos_end)
         )
@@ -68,11 +68,82 @@ class Interpreter:
     def visit_VarAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
+        update = node.update
+
+        if update:
+            u_value = context.symbol_table.get(var_name)
+            
+            if not u_value:
+                return res.failure(
+                    RTError(
+                        node.pos_start, node.pos_end,
+                        f"'{var_name}' is not defined",
+                        context
+                    )
+                )
+
         value = res.register(self.visit(node.value_node, context))
         if res.should_return(): return res
 
         context.symbol_table.set(var_name, value)
         return res.success(value)
+
+    def visit_MultiVarAccessNode(self, node, context):
+        res = RTResult()
+        var_names = node.var_name_toks
+
+        current_value = None
+
+        for var_name in var_names:
+            if current_value == None:
+                value = context.symbol_table.get(var_name[0].value)
+            else:
+                value = current_value.elements.get(var_name[0].value, None)
+            
+
+            if not value:
+                return res.failure(
+                    RTError(
+                        var_name[1], var_name[2],
+                        f"'{var_name[0].value}' is not defined",
+                        context
+                    )
+                )
+            
+            current_value = value
+
+        current_value = current_value.copy().set_pos(node.pos_start, node.pos_end).set_context(context)
+        return res.success(current_value)
+
+    def visit_MultiVarAssignNode(self, node, context):
+        res = RTResult()
+        var_names = node.var_name_toks
+
+        current_value = None
+        i = 0
+        for var_name in var_names:
+            i += 1
+            if current_value == None:
+                value = context.symbol_table.get(var_name[0].value)
+            else:
+                value = current_value.elements.get(var_name[0].value, None)
+            
+
+            if not value:
+                return res.failure(
+                    RTError(
+                        var_name[1], var_name[2],
+                        f"'{var_name[0].value}' is not defined",
+                        context
+                    )
+                )
+            
+            current_value = value
+
+            if len(var_names)-1 == i:
+                current_value.elements[var_names[len(var_names)-1][0].value] = res.register(self.visit(node.value_node, context))
+
+        return res.success(context.symbol_table.get(var_names[0][0].value))
 
     def visit_BinOpNode(self, node, context):
         res = RTResult()
