@@ -7,10 +7,16 @@ class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
         self.tok_idx = -1
+
         self.advance()
 
     def advance(self):
         self.tok_idx += 1
+        self.update_current_tok()
+        return self.current_tok
+
+    def deadvance(self):
+        self.tok_idx -= 1
         self.update_current_tok()
         return self.current_tok
 
@@ -26,7 +32,17 @@ class Parser:
     def parse(self):
         res = self.statements()
         if not res.error and self.current_tok.type not in (TT_EOF, TT_KEYWORD, TT_DOT):
-            return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected '+', '-', '*' or '/'"))
+            self.deadvance()
+
+            if self.current_tok.matches(TT_KEYWORD, KEYWORDS.AS):
+                self.advance()
+                if self.current_tok.type == TT_IDENTIFIER:
+                    return res
+                self.deadvance()
+
+            self.advance()
+            
+            return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected '.', '+', '-', '*' or '/'"))
         return res
 
     def statements(self):
@@ -641,6 +657,44 @@ class Parser:
 
         return res.success(VarAccessNode(var_name))
 
+    def import_expr(self):
+        res = ParseResult()
+        pos_start = self.current_tok.pos_start.copy()
+
+        if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.IMPORT):
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                f"Expected '{KEYWORDS.IMPORT}'"
+            ))
+        
+        res.register_advancement()
+        self.advance()
+
+        lib_name = res.register(self.expr())        
+        if res.error: return res
+        
+        if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.AS):
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                f"Expected '{KEYWORDS.AS}'"
+            ))
+        
+        res.register_advancement()
+        self.advance()
+
+        if self.current_tok.type != TT_IDENTIFIER:
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected identifier"
+            ))
+        
+        var_name = self.current_tok
+
+        res.register_advancement()
+        self.advance()
+
+        return res.success(ImportNode(lib_name, var_name, pos_start, self.current_tok.pos_end.copy()))
+
     def atom(self):
         res = ParseResult()
         tok = self.current_tok
@@ -704,6 +758,10 @@ class Parser:
             func_def = res.register(self.func_def())
             if res.error: return res
             return res.success(func_def)
+        elif tok.matches(TT_KEYWORD, KEYWORDS.IMPORT):
+            import_expr = res.register(self.import_expr())
+            if res.error: return res
+            return res.success(import_expr)
 
         return res.failure(InvalidSyntaxError(tok.pos_start, tok.pos_end, f"Expected '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}', int, float, list, boolean, null, identifier, '+', '-', '(', '{'{'}' or '['"))
     

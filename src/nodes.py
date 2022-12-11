@@ -167,3 +167,11 @@ class BreakNode:
 	def __init__(self, pos_start, pos_end):
 		self.pos_start = pos_start
 		self.pos_end = pos_end
+
+class ImportNode:
+	def __init__(self, lib_name, var_name, pos_start, pos_end):
+		self.lib_name = lib_name
+		self.var_name = var_name
+
+		self.pos_start = pos_start
+		self.pos_end = pos_end

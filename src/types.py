@@ -322,19 +322,6 @@ class Object(Type):
     def __init__(self, elements):
         super().__init__()
         self.elements = elements
-    
-    def dotted_to(self, other):
-        if isinstance(other, String):
-            obj = getTupleListValue(self.elements, other, 0, checkValue=True)
-            if obj != None:
-                return obj[1], None
-
-            return None, RTResult().failure(RTError(
-                other.pos_end, other.pos_end,
-                f"{other.value} is not define",
-                self.context
-            ))
-        return None, Type.illegal_operation(self, other)
 
     def subbed_by(self, other):
         if isinstance(other, String):
@@ -624,7 +611,7 @@ class BuiltInFunction(BaseFunction):
         return RTResult().success(Number(leng))
     execute_len.arg_names = ["value"]
 
-    def execute_import(self, exec_ctx):
+    def execute_run(self, exec_ctx):
         fn = exec_ctx.symbol_table.get("fn")
 
         if not isinstance(fn, String):
@@ -658,7 +645,7 @@ class BuiltInFunction(BaseFunction):
             ))
 
         return RTResult().success(Null())
-    execute_import.arg_names = ["fn"]
+    execute_run.arg_names = ["fn"]
 
 BuiltInFunction.print = BuiltInFunction("print")
 BuiltInFunction.input = BuiltInFunction("input")
@@ -674,46 +661,33 @@ BuiltInFunction.append = BuiltInFunction("append")
 BuiltInFunction.pop = BuiltInFunction("pop")
 BuiltInFunction.extend = BuiltInFunction("extend")
 BuiltInFunction.len = BuiltInFunction("len")
-BuiltInFunction.import_ = BuiltInFunction("import")
+BuiltInFunction.run = BuiltInFunction("run")
 
 Number.math_PI = Number(math.pi)
 
-def register_var(global_symbol_table):
-    global_symbol_table.set("math_pi", Number.math_PI)
+global_vars = {
+    "math_pi": Number.math_PI,
+    "print": BuiltInFunction.print,
+    "input": BuiltInFunction.input,
+    "input_int": BuiltInFunction.input_int,
+    "clear": BuiltInFunction.clear,
+    "is_number": BuiltInFunction.is_number,
+    "is_string": BuiltInFunction.is_string,
+    "is_boolean": BuiltInFunction.is_boolean,
+    "is_null": BuiltInFunction.is_null,
+    "is_list": BuiltInFunction.is_list,
+    "is_function": BuiltInFunction.is_function,
+    "append": BuiltInFunction.append,
+    "pop": BuiltInFunction.pop,
+    "extend": BuiltInFunction.extend,
+    "len": BuiltInFunction.len,
+    "run": BuiltInFunction.run
+}
 
-    global_symbol_table.set("print", BuiltInFunction.print)
-    global_symbol_table.set("input", BuiltInFunction.input)
-    global_symbol_table.set("input_int", BuiltInFunction.input_int)
-    global_symbol_table.set("clear", BuiltInFunction.clear)
-    global_symbol_table.set("is_number", BuiltInFunction.is_number)
-    global_symbol_table.set("is_string", BuiltInFunction.is_string)
-    global_symbol_table.set("is_boolean", BuiltInFunction.is_boolean)
-    global_symbol_table.set("is_null", BuiltInFunction.is_null)
-    global_symbol_table.set("is_list", BuiltInFunction.is_list)
-    global_symbol_table.set("is_function", BuiltInFunction.is_function)
-    global_symbol_table.set("append", BuiltInFunction.append)
-    global_symbol_table.set("pop", BuiltInFunction.pop)
-    global_symbol_table.set("extend", BuiltInFunction.extend)
-    global_symbol_table.set("len", BuiltInFunction.len)
-    global_symbol_table.set("import", BuiltInFunction.import_)
+def register_var(symbol_table):
+    for name, value in global_vars.items():
+        symbol_table.set(name, value)
 
-
-def isInTupleList(list, obj, index, checkValue=False):
-    for i in list:
-        if checkValue:
-            if i[index].value == obj.value:
-                return True
-        else:   
-            if i[index] == obj: 
-                return True
-    return False
-
-def getTupleListValue(list, obj, index, checkValue=False):
-    for i in list:
-        if checkValue:
-            if i[index].value == obj.value:
-                return i
-        else:   
-            if i[index] == obj: 
-                return i
-    return None
+def unregister_var(symbol_table):
+    for name in global_vars.keys():
+        symbol_table.remove(name)

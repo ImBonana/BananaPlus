@@ -61,6 +61,8 @@ class keyWordsClass:
         self.RETURN = "RETURN"
         self.CONTINUE = "CONTINUE"
         self.BREAK = "BREAK"
+        self.IMPORT = "IMPORT"
+        self.AS = "AS"
 
 KEYWORDS = keyWordsClass()
 
@@ -84,5 +86,7 @@ KEYWORDS_LIST = [
     KEYWORDS.END,
     KEYWORDS.RETURN,
     KEYWORDS.CONTINUE,
-    KEYWORDS.BREAK
+    KEYWORDS.BREAK,
+    KEYWORDS.IMPORT,
+    KEYWORDS.AS
 ]

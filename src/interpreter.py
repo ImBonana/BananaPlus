@@ -95,10 +95,20 @@ class Interpreter:
         current_value = None
 
         for var_name in var_names:
-            if current_value == None:
-                value = context.symbol_table.get(var_name[0].value)
-            else:
-                value = current_value.elements.get(var_name[0].value, None)
+
+            try:
+                if current_value == None:
+                    value = context.symbol_table.get(var_name[0].value)
+                else:
+                    value = current_value.elements.get(var_name[0].value, None)
+            except:
+                return res.failure(
+                    RTError(
+                        node.pos_start, node.pos_end,
+                        f"'{current_value}' is not a object",
+                        context
+                    )
+                )
             
 
             if not value:
@@ -123,11 +133,19 @@ class Interpreter:
         i = 0
         for var_name in var_names:
             i += 1
-            if current_value == None:
-                value = context.symbol_table.get(var_name[0].value)
-            else:
-                value = current_value.elements.get(var_name[0].value, None)
-            
+            try:
+                if current_value == None:
+                    value = context.symbol_table.get(var_name[0].value)
+                else:
+                    value = current_value.elements.get(var_name[0].value, None)
+            except:
+                return res.failure(
+                    RTError(
+                        node.pos_start, node.pos_end,
+                        f"'{current_value}' is not a object",
+                        context
+                    )
+                )
 
             if not value:
                 return res.failure(
@@ -141,7 +159,16 @@ class Interpreter:
             current_value = value
 
             if len(var_names)-1 == i:
-                current_value.elements[var_names[len(var_names)-1][0].value] = res.register(self.visit(node.value_node, context))
+                try:
+                    current_value.elements[var_names[len(var_names)-1][0].value] = res.register(self.visit(node.value_node, context))
+                except:
+                    return res.failure(
+                    RTError(
+                        var_name[1], var_name[2],
+                        f"'{current_value}' is not a object",
+                        context
+                    )
+                )
 
         return res.success(context.symbol_table.get(var_names[0][0].value))
 
@@ -221,7 +248,7 @@ class Interpreter:
             if res.should_return(): return res
             return res.success(Null() if should_return_null else expr_value)
 
-        return res.success(Null())
+        return res.success(Null().set_context(context).set_pos(node.pos_start, node.pos_end))
 
     def visit_ForNode(self, node, context):
         res = RTResult()
@@ -230,12 +257,33 @@ class Interpreter:
         start_value = res.register(self.visit(node.start_value_node, context))
         if res.should_return(): return res
 
+        if not isinstance(start_value, Number):
+                return res.failure(RTError(
+                    start_value.pos_start, start_value.pos_end,
+                    "Expected number",
+                    context
+                ))
+
         end_value = res.register(self.visit(node.end_value_node, context))
         if res.should_return(): return res
+
+        if not isinstance(end_value, Number):
+                return res.failure(RTError(
+                    end_value.pos_start, end_value.pos_end,
+                    "Expected number",
+                    context
+                ))
 
         if node.step_value_node:
             step_value = res.register(self.visit(node.step_value_node, context))
             if res.should_return(): return res
+
+            if not isinstance(step_value, Number):
+                return res.failure(RTError(
+                    step_value.pos_start, step_value.pos_end,
+                    "Expected number",
+                    context
+                ))
         else:
             step_value = Number(1)
 
@@ -336,5 +384,67 @@ class Interpreter:
     def visit_ContinueNode(self, node, context):
         return RTResult().success_continue()
     
+    def visit_ImportNode(self, node, context):
+        res = RTResult()
+
+        lib_name = res.register(self.visit(node.lib_name, context))
+        if res.should_return(): return res
+
+        if not isinstance(lib_name, String):
+            return RTResult().failure(RTError(
+                node.pos_start, node.pos_end,
+                "Lib name must be string",
+                context
+            ))
+
+        var_name = node.var_name.value
+
+        if not var_name:
+            return RTResult().failure(RTError(
+                var_name.pos_start, var_name.pos_end,
+                "Expected identfier",
+                context
+            ))
+
+        lib_name = lib_name.value
+
+        path = lib_name
+
+        from BananaLang import workspace_dir, lib_dir
+
+        if lib_name.endswith(".bl"):
+            path = workspace_dir
+            path += "\\"
+            path += lib_name
+        else:
+            path = lib_dir
+            path += "\\"
+            path += lib_name + ".bl"
+
+        try:
+            with open(path, "r") as f:
+                script = f.read()
+        except Exception as e:
+            return RTResult().failure(RTError(
+                node.pos_start, node.pos_end,
+                F"Failed to load script \"{path}\"\n" + str(e),
+                context
+            ))
+        
+        from BananaLang import import_lib
+
+        vars, result, error = import_lib(lib_name, script)
+
+        if error:
+            return RTResult().failure(RTError(
+                node.pos_start, node.pos_end,
+                f"Failed to finish executing script \"{path}\"\n" + error.as_string(),
+                context
+            ))
+
+        context.symbol_table.set(var_name, Object(vars))
+
+        return RTResult().success(Null().set_context(context).set_pos(node.pos_start, node.pos_end))
+
     def visit_BreakNode(self, node, context):
         return RTResult().success_break()
