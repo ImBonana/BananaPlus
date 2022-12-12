@@ -23,14 +23,9 @@ class Lexer:
         tokens = []
 
         while self.current_char != None:
-            if self.current_char in ' \t':
+            if self.current_char in char_spaces:
                 self.advance()
-            elif self.current_char == "/":
-                token, error = self.make_slash()
-                if error: return [], error
-                if token != None:
-                    tokens.append(token)
-            elif self.current_char in ";\n":
+            elif self.current_char in char_new_lines:
                 tokens.append(Token(TT_NEWLINE, pos_start=self.pos))
                 self.advance()
             elif self.current_char in DIGITS:
@@ -56,8 +51,10 @@ class Lexer:
                 tokens.append(Token(TT_MUL, pos_start=self.pos))
                 self.advance()
             elif self.current_char == "/":
-                tokens.append(Token(TT_DIV, pos_start=self.pos))
-                self.advance()
+                token, error = self.make_slash()
+                if error: return [], error
+                if token != None:
+                    tokens.append(token)
             elif self.current_char == "^":
                 tokens.append(Token(TT_POW, pos_start=self.pos))
                 self.advance()
@@ -108,11 +105,11 @@ class Lexer:
         return tokens, None
     
     def skip_comment(self):
+        
         self.advance()
 
         while self.current_char != '\n':
             self.advance()
-
         self.advance()
 
     def make_slash(self):
@@ -124,7 +121,8 @@ class Lexer:
             self.skip_comment()
             return None, None
         
-        return None, IllegalCharError(pos_start, self.pos, "'" + self.current_char + "'")
+        self.advance()
+        return Token(TT_DIV, pos_start=pos_start), None
 
     def make_number(self):
         num_str = ''

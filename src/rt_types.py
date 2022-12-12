@@ -39,6 +39,9 @@ escape_characters = {
     "t": "\t"
 }
 
+char_spaces = " \t"
+char_new_lines = ";\n"
+
 class keyWordsClass:
     def __init__(self):
         self.VAR = "VAR"

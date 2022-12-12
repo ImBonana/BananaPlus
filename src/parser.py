@@ -20,6 +20,11 @@ class Parser:
         self.update_current_tok()
         return self.current_tok
 
+    def skip_newline(self):
+        while self.current_tok.type == TT_NEWLINE:
+            self.advance()
+        return self.current_tok
+
     def reverse(self, amount=1):
         self.tok_idx -= amount
         self.update_current_tok()
@@ -150,14 +155,20 @@ class Parser:
         self.advance()
         arg_name_toks = []
 
+        self.skip_newline()
+
         if self.current_tok.type == TT_IDENTIFIER:
             arg_name_toks.append(self.current_tok)
             res.register_advancement()
             self.advance()
 
+            self.skip_newline()
+
             while self.current_tok.type == TT_COMMA:
                 res.register_advancement()
                 self.advance()
+
+                self.skip_newline()
                 
                 if self.current_tok.type != TT_IDENTIFIER:
                     return res.failure(InvalidSyntaxError(
@@ -166,9 +177,11 @@ class Parser:
                     ))
 
                 arg_name_toks.append(self.current_tok)
+
                 res.register_advancement()
                 self.advance()
-            
+                self.skip_newline()
+
             if self.current_tok.type != TT_RPAREN:
                 return res.failure(InvalidSyntaxError(
                     self.current_tok.pos_start, self.current_tok.pos_end,
@@ -294,8 +307,12 @@ class Parser:
         res.register_advancement()
         self.advance()
 
+        self.skip_newline()
+
         condition = res.register(self.expr())
         if res.error: return res
+
+        self.skip_newline()
 
         if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.THEN):
             return res.failure(InvalidSyntaxError(
@@ -346,15 +363,21 @@ class Parser:
         res.register_advancement()
         self.advance()
 
+        self.skip_newline()
+
         if self.current_tok.type != TT_IDENTIFIER:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
                 "Expected identifier"
             ))
 
+        self.skip_newline()
+
         var_name = self.current_tok
         res.register_advancement()
         self.advance()
+
+        self.skip_newline()
 
         if self.current_tok.type != TT_EQ:
             return res.failure(InvalidSyntaxError(
@@ -365,8 +388,12 @@ class Parser:
         res.register_advancement()
         self.advance()
 
+        self.skip_newline()
+
         start_value = res.register(self.expr())
         if res.error: return res
+
+        self.skip_newline()
 
         if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.TO):
             return res.failure(InvalidSyntaxError(
@@ -374,19 +401,29 @@ class Parser:
                 f"Expected '{KEYWORDS.TO}'"
             ))
 
+
         res.register_advancement()
         self.advance()
 
+        self.skip_newline()
+
         end_value = res.register(self.expr())
         if res.error: return res
+        
+        self.skip_newline()
 
         if self.current_tok.matches(TT_KEYWORD, KEYWORDS.STEP):
             res.register_advancement()
             self.advance()
+
+            self.skip_newline()
+
             step_value = res.register(self.expr())
             if res.error: return res
         else:
             step_value = None
+
+        self.skip_newline()
 
         if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.THEN):
             return res.failure(InvalidSyntaxError(
@@ -429,11 +466,17 @@ class Parser:
                 f"Expected '{KEYWORDS.WHILE}'"
             ))
 
+        self.skip_newline()
+
         res.register_advancement()
         self.advance()
 
+        self.skip_newline()
+
         condition = res.register(self.expr())
         if res.error: return res
+
+        self.skip_newline()
 
         if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.THEN):
             return res.failure(InvalidSyntaxError(
@@ -480,6 +523,8 @@ class Parser:
 
         res.register_advancement()
         self.advance()
+
+        self.skip_newline()
         
         if self.current_tok.type == TT_RSQUARE:
             res.register_advancement()
@@ -492,12 +537,18 @@ class Parser:
                     f"Expected ']', '{KEYWORDS.VAR}', '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}', int, float, list, boolean, null, identifier, '+', '-', '(', '{'{'}' or '['"
                 ))
 
+            self.skip_newline()
+
             while self.current_tok.type == TT_COMMA:
                 res.register_advancement()
                 self.advance()
 
+                self.skip_newline()
+
                 element_nodes.append(res.register(self.expr()))
                 if res.error: return res
+
+                self.skip_newline()
             
             if self.current_tok.type != TT_RSQUARE:
                 return res.failure(InvalidSyntaxError(
@@ -530,6 +581,8 @@ class Parser:
         res.register_advancement()
         self.advance()
 
+        self.skip_newline()
+
         if self.current_tok.type == TT_RCURLY:
             res.register_advancement()
             self.advance()
@@ -541,7 +594,7 @@ class Parser:
                 ))
 
             var_name = self.current_tok
-            
+
             res.register_advancement()
             self.advance()
 
@@ -554,6 +607,8 @@ class Parser:
             res.register_advancement()
             self.advance()
 
+            self.skip_newline()
+
             expr = res.register(self.expr())
             if res.error: 
                 return res.failure(InvalidSyntaxError(
@@ -562,10 +617,14 @@ class Parser:
                 ))
             
             elements_nodes.append((var_name, expr))
-                
+            
+            self.skip_newline()
+
             while self.current_tok.type == TT_COMMA:
                 res.register_advancement()
                 self.advance()
+
+                self.skip_newline()
 
                 if self.current_tok.type == TT_IDENTIFIER:
                     var_name = self.current_tok
@@ -582,9 +641,13 @@ class Parser:
                     res.register_advancement()
                     self.advance()
 
+                    self.skip_newline()
+
                     expr = res.register(self.expr())
                     if res.error: return res
                     elements_nodes.append((var_name, expr))
+
+                    self.skip_newline()
 
             if self.current_tok.type != TT_RCURLY:
                 return res.failure(InvalidSyntaxError(
@@ -672,6 +735,8 @@ class Parser:
 
         lib_name = res.register(self.expr())        
         if res.error: return res
+
+        self.skip_newline()
         
         if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.AS):
             return res.failure(InvalidSyntaxError(
@@ -726,8 +791,10 @@ class Parser:
         elif tok.type == TT_LPAREN:
             res.register_advancement()
             self.advance()
+            self.skip_newline()
             expr = res.register(self.expr())
             if res.error: return res
+            self.skip_newline()
             if self.current_tok.type == TT_RPAREN:
                 res.register_advancement()
                 self.advance()
@@ -773,6 +840,7 @@ class Parser:
         if self.current_tok.type == TT_LPAREN:
             res.register_advancement()
             self.advance()
+            self.skip_newline()
             arg_nodes = []
 
             if self.current_tok.type == TT_RPAREN:
@@ -785,13 +853,16 @@ class Parser:
                         self.current_tok.pos_start, self.current_tok.pos_end,
                         f"Expected ')', '{KEYWORDS.VAR}', '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}', int, float, list, boolean, null, identifier, '+', '-' or '('"
                     ))
-
+                self.skip_newline()
                 while self.current_tok.type == TT_COMMA:
                     res.register_advancement()
                     self.advance()
 
+                    self.skip_newline()
+
                     arg_nodes.append(res.register(self.expr()))
                     if res.error: return res
+                    self.skip_newline()
                 
                 if self.current_tok.type != TT_RPAREN:
                     return res.failure(InvalidSyntaxError(
@@ -828,7 +899,7 @@ class Parser:
         return self.bin_op(self.term, (TT_PLUS, TT_MINUS))
 
     def dot(self):
-        return self.bin_op(self.arith_expr, (TT_DOT, ))
+        return self.bin_op(self.arith_expr, (TT_EE, TT_NE, TT_LT, TT_GT, TT_LTE, TT_GTE) )
 
     def comp_expr(self):
         res = ParseResult()
@@ -898,11 +969,13 @@ class Parser:
         res = ParseResult()
         left = res.register(func_a())
         if res.error: return res
+        self.skip_newline()
 
         while self.current_tok.type in ops or (self.current_tok.type, self.current_tok.value) in ops:
             op_tok = self.current_tok
             res.register_advancement()
             self.advance()
+            self.skip_newline()
             right = res.register(func_b())
             if res.error: return res
             left = BinOpNode(left, op_tok, right)
