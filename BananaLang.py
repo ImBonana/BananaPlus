@@ -4,6 +4,7 @@ from src.interpreter import Interpreter
 from src.errors import Context
 from src.symbol_table import SymbolTable
 import src.types as types
+import src.built_in as built_in
 import os
 
 global_symbol_table = SymbolTable()
@@ -12,7 +13,7 @@ workspace_dir = os.path.dirname(os.path.realpath(__file__))
 
 lib_dir = os.path.dirname(os.path.realpath(__file__))
 
-types.register_var(global_symbol_table)
+built_in.register_var(global_symbol_table)
 
 def run(fn, text):
     lexer = Lexer(fn, text)
@@ -44,12 +45,12 @@ def import_lib(fn, text):
     context = Context('<program>')
     lib_symbol_table = SymbolTable()
 
-    types.register_var(lib_symbol_table)
+    built_in.register_var(lib_symbol_table)
 
     context.symbol_table = lib_symbol_table
 
     result = interpreter.visit(ast.node, context)
 
-    types.unregister_var(lib_symbol_table)
+    built_in.unregister_var(lib_symbol_table)
 
     return lib_symbol_table.symbols, result.value, result.error

@@ -82,6 +82,9 @@ class Lexer:
             elif self.current_char == ".":
                 tokens.append(Token(TT_DOT, pos_start=self.pos))
                 self.advance()
+            elif self.current_char == "?":
+                tokens.append(Token(TT_QM, pos_start=self.pos))
+                self.advance()
             elif self.current_char == "!":
                 tok, error = self.make_not_equals()
                 if error: return [], error
@@ -108,7 +111,7 @@ class Lexer:
         
         self.advance()
 
-        while self.current_char != '\n':
+        while self.current_char != '\n' and self.current_char != None:
             self.advance()
         self.advance()
 
