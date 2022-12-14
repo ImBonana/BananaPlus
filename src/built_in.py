@@ -157,6 +157,54 @@ class BuiltInFunction(BaseFunction):
         return RTResult().success(Number(leng))
     execute_len.arg_names = [("value", False)]
 
+    def execute_String(self, exec_ctx):
+        value = exec_ctx.symbol_table.get("value")
+        return RTResult().success(String(str(value)))
+    execute_String.arg_names = [("value", False)]
+    
+    def execute_Number(self, exec_ctx):
+        value = exec_ctx.symbol_table.get("value")
+        if isinstance(value, String):
+            try:
+                value = Number(int(value.value))
+            except:
+                return RTResult().failure(RTError(
+                    self.pos_start, self.pos_end,
+                    "A string argument must contain at least one number",
+                    exec_ctx
+                ))
+        elif isinstance(value, Boolean):
+            if value.value == True:
+                value = Number(1)
+            else:
+                value = Number(0)
+        else:
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "The argument must be a string or boolean",
+                exec_ctx
+            ))
+
+        return RTResult().success(value)
+    execute_Number.arg_names = [("value", False)]
+    
+    def execute_Boolean(self, exec_ctx):
+        value = exec_ctx.symbol_table.get("value")
+        if isinstance(value, String):
+            value = Boolean("true" in value.value.lower())
+        elif isinstance(value, Number):
+           value = Boolean(1 == value.value)
+        else:
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "The argument must be a string or number",
+                exec_ctx
+            ))
+
+        return RTResult().success(value)
+    execute_Boolean.arg_names = [("value", False)]
+
+
 BuiltInFunction.print = BuiltInFunction("print")
 BuiltInFunction.input = BuiltInFunction("input")
 BuiltInFunction.input_int = BuiltInFunction("input_int")
@@ -167,6 +215,9 @@ BuiltInFunction.is_boolean = BuiltInFunction("is_boolean")
 BuiltInFunction.is_null = BuiltInFunction("is_null")
 BuiltInFunction.is_list = BuiltInFunction("is_list")
 BuiltInFunction.is_function = BuiltInFunction("is_function")
+BuiltInFunction.string = BuiltInFunction("String")
+BuiltInFunction.number = BuiltInFunction("Number")
+BuiltInFunction.boolean = BuiltInFunction("Boolean")
 BuiltInFunction.len = BuiltInFunction("len")
 
 global_math = Object({
@@ -186,6 +237,9 @@ global_vars = {
     "is_null": BuiltInFunction.is_null,
     "is_list": BuiltInFunction.is_list,
     "is_function": BuiltInFunction.is_function,
+    "String": BuiltInFunction.string,
+    "Number": BuiltInFunction.number,
+    "Boolean": BuiltInFunction.boolean,
     "len": BuiltInFunction.len
 }
 
