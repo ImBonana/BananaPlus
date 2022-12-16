@@ -39,10 +39,10 @@ class Type:
         return None, self.illegal_operation(other)
 
     def get_comparison_eq(self, other):
-        return Boolean(self.value == other.value).set_context(self.context), None
+        return Boolean(self.equals(other)).set_context(self.context), None
 
     def get_comparison_ne(self, other):
-        return Boolean(self.value != other.value).set_context(self.context), None
+        return Boolean(not self.equals(other)).set_context(self.context), None
 
     def get_comparison_lt(self, other):
         return None, self.illegal_operation(other)
@@ -70,6 +70,9 @@ class Type:
 
     def is_true(self):
         return True
+
+    def equals(self, other):
+        return self.__class__ == other.__class__
 
     def copy(self):
         copy = self(self.value)
@@ -154,6 +157,8 @@ class Number(Type):
         copy.set_context(self.context)
         return copy
 
+    def equals(self, other):
+        return self.__class__ == other.__class__ and self.value == other.value
 
     def __repr__(self):
         return str(self.value)
@@ -186,6 +191,9 @@ class String(Type):
         copy.set_context(self.context)
         return copy
 
+    def equals(self, other):
+        return self.__class__ == other.__class__ and self.value == other.value
+
     def __repr__(self):
         return f'"{self.value}"'
 
@@ -210,6 +218,9 @@ class Boolean(Type):
         copy.set_pos(self.pos_start, self.pos_end)
         copy.set_context(self.context)
         return copy
+
+    def equals(self, other):
+        return self.__class__ == other.__class__ and self.value == other.value
 
     def __repr__(self):
         return f"{KEYWORDS.__dict__[str(self.value).upper()]}"
@@ -319,6 +330,9 @@ class List(Type):
         copy.set_context(self.context)
         return copy
 
+    def equals(self, other):
+        return self.__class__ == other.__class__ and self.elements == other.elements
+
     def __repr__(self):
         list_ = []
         for x in self.elements:
@@ -357,6 +371,9 @@ class Object(Type):
         copy.set_pos(self.pos_start, self.pos_end)
         copy.set_context(self.context)
         return copy
+
+    def equals(self, other):
+        return self.__class__ == other.__class__ and self.elements == other.elements
 
     def __repr__(self):
         string = "{  }"
@@ -434,6 +451,9 @@ class BaseFunction(Type):
         self.populate_args(arg_names, args, exec_ctx)
         
         return res.success(None)
+
+    def equals(self, other):
+        return self.__class__ == other.__class__ and self.name == other.name
 
 class Function(BaseFunction):
     def __init__(self, name, body_node, arg_names, should_auto_return):

@@ -693,7 +693,6 @@ class Parser:
     
     def identifier_expr(self):
         res = ParseResult()
-        pos_start = self.current_tok.pos_start.copy()
 
         if self.current_tok.type != TT_IDENTIFIER:
             return res.failure(InvalidSyntaxError(
@@ -786,6 +785,117 @@ class Parser:
 
         return res.success(ImportNode(lib_name, var_name, pos_start, self.current_tok.pos_end.copy()))
 
+    def switch_expr(self):
+        res = ParseResult()
+        pos_start = self.current_tok.pos_start.copy()
+
+        if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.SWITCH):
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                f"Expected '{KEYWORDS.SWITCH}'"
+            ))
+        
+        res.register_advancement()
+        self.advance()
+
+        self.skip_newline(res)
+
+        value_node = res.register(self.expr())        
+        if res.error: return res
+
+        self.skip_newline(res)
+        
+        if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.THEN):
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                f"Expected '{KEYWORDS.THEN}'"
+            ))
+        
+        res.register_advancement()
+        self.advance()
+
+        self.skip_newline(res)
+
+        cases = []
+        default = None
+
+        while self.current_tok.matches(TT_KEYWORD, KEYWORDS.CASE):
+            res.register_advancement()
+            self.advance()
+            self.skip_newline(res)
+
+            case_value_node = res.register(self.expr())
+            if res.error: return res
+
+            self.skip_newline(res)
+
+            if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.THEN):
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    f"Expected '{KEYWORDS.THEN}'"
+                ))
+
+            res.register_advancement()
+            self.advance()
+            self.skip_newline(res)
+
+            expr = res.register(self.statements())
+            if res.error: return res
+
+            self.skip_newline(res)
+
+            if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.END):
+                return res.failure(InvalidSyntaxError(
+                    self.current_tok.pos_start, self.current_tok.pos_end,
+                    f"Expected '{KEYWORDS.END}'"
+                ))
+
+            cases.append((case_value_node, expr))
+
+            res.register_advancement()
+            self.advance()
+            self.skip_newline(res)
+
+
+            if self.current_tok.matches(TT_KEYWORD, KEYWORDS.DEFAULT):
+                if default != None:
+                    return res.failure(InvalidSyntaxError(
+                        self.current_tok.pos_start, self.current_tok.pos_end,
+                        f"Unexpected '{KEYWORDS.DEFAULT}'"
+                    ))
+
+                res.register_advancement()
+                self.advance()
+                self.skip_newline(res)
+
+                expr = res.register(self.expr())
+                if res.error: return res
+
+                self.skip_newline(res)
+
+                if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.END):
+                    return res.failure(InvalidSyntaxError(
+                        self.current_tok.pos_start, self.current_tok.pos_end,
+                        f"Expected '{KEYWORDS.END}'"
+                    ))
+                
+                res.register_advancement()
+                self.advance()
+                self.skip_newline(res)
+
+                default = expr
+
+        if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.END):
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                f"Expected '{KEYWORDS.END}'"
+            ))
+
+        res.register_advancement()
+        self.advance()
+
+        return res.success(SwitchNode(value_node, cases, default, pos_start, self.current_tok.pos_end.copy()))
+
     def atom(self):
         res = ParseResult()
         tok = self.current_tok
@@ -855,6 +965,10 @@ class Parser:
             import_expr = res.register(self.import_expr())
             if res.error: return res
             return res.success(import_expr)
+        elif tok.matches(TT_KEYWORD, KEYWORDS.SWITCH):
+            switch_expr = res.register(self.switch_expr())
+            if res.error: return res
+            return res.success(switch_expr)
 
         return res.failure(InvalidSyntaxError(tok.pos_start, tok.pos_end, f"Expected '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}', int, float, list, boolean, null, identifier, '+', '-', '(', '{'{'}' or '['"))
     

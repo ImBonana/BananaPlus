@@ -102,6 +102,15 @@ class IfNode:
 		self.pos_start = self.cases[0][0].pos_start
 		self.pos_end = (self.else_case or self.cases[len(self.cases) -1])[0].pos_end
 
+class SwitchNode:
+	def __init__(self, value_node, cases, default, pos_start, pos_end):
+		self.value_node = value_node
+		self.cases = cases
+		self.default = default
+
+		self.pos_start = pos_start
+		self.pos_end = pos_end
+
 class ForNode:
 	def __init__(self, var_name_tok, start_value_node, end_value_node, step_value_node, body_node, should_return_null):
 		self.var_name_tok = var_name_tok

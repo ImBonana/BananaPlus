@@ -67,6 +67,10 @@ class keyWordsClass:
         self.BREAK = "BREAK"
         self.IMPORT = "IMPORT"
         self.AS = "AS"
+        self.SWITCH = "SWITCH"
+        self.CASE = "CASE"
+        self.DEFAULT = "DEFAULT"
+
 
 KEYWORDS = keyWordsClass()
 
@@ -92,5 +96,8 @@ KEYWORDS_LIST = [
     KEYWORDS.CONTINUE,
     KEYWORDS.BREAK,
     KEYWORDS.IMPORT,
-    KEYWORDS.AS
+    KEYWORDS.AS,
+    KEYWORDS.SWITCH,
+    KEYWORDS.CASE,
+    KEYWORDS.DEFAULT
 ]

@@ -233,14 +233,34 @@ class Interpreter:
             if condition_value.is_true():
                 expr_value = res.register(self.visit(expr, context))
                 if res.should_return(): return res
-                return res.success(Null() if should_return_null else expr_value)
+                return res.success(Null().set_context(context).set_pos(node.pos_start, node.pos_end) if should_return_null else expr_value)
 
         if node.else_case:
             expr, should_return_null = node.else_case
             expr_value = res.register(self.visit(expr, context))
             if res.should_return(): return res
-            return res.success(Null() if should_return_null else expr_value)
+            return res.success(Null().set_context(context).set_pos(node.pos_start, node.pos_end) if should_return_null else expr_value)
 
+        return res.success(Null().set_context(context).set_pos(node.pos_start, node.pos_end))
+
+    def visit_SwitchNode(self, node, context):
+        res = RTResult()
+        value = res.register(self.visit(node.value_node, context))
+        if res.should_return(): return res
+
+        for case, expr in node.cases:
+            case_value = res.register(self.visit(case, context))
+            if res.should_return(): return res
+
+            if value.equals(case_value):
+                res.register(self.visit(expr, context))
+                if res.should_return(): return res
+                return res.success(Null().set_context(context).set_pos(node.pos_start, node.pos_end))
+
+        if node.default:
+            res.register(self.visit(node.default, context))
+            if res.should_return(): return res
+        
         return res.success(Null().set_context(context).set_pos(node.pos_start, node.pos_end))
 
     def visit_ForNode(self, node, context):
