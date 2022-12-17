@@ -408,7 +408,7 @@ class Interpreter:
 
         path = lib_name
 
-        from BananaLang import workspace_dir, lib_dir
+        from BananaPlus import workspace_dir, lib_dir
 
         if lib_name.endswith(".bl"):
             path = workspace_dir
@@ -429,7 +429,7 @@ class Interpreter:
                 context
             ))
         
-        from BananaLang import import_lib
+        from BananaPlus import import_lib
 
         vars, result, error = import_lib(lib_name, script)
 

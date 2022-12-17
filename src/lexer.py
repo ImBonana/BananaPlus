@@ -171,91 +171,91 @@ class Lexer:
         return Token(TT_STRING, string, pos_start, self.pos)
     
     #! not working right now
-    def make_f_string(self):
-        string = ''
-        pos_start = self.pos.copy()
-        escape_character = False
-        start_code = False
-        in_code = False
-        code = ''
-        pos_start = self.pos.copy()
+    # def make_f_string(self):
+    #     string = ''
+    #     pos_start = self.pos.copy()
+    #     escape_character = False
+    #     start_code = False
+    #     in_code = False
+    #     code = ''
+    #     pos_start = self.pos.copy()
 
-        self.advance()
+    #     self.advance()
 
-        while self.current_char != None and (self.current_char != '`' or escape_character):
-            if escape_character:
-                string += escape_characters.get(self.current_char, self.current_char)
-                escape_character = False
-            elif start_code:
-                if self.current_char == "{":
-                    in_code = True
-                    start_code = False
-                    pos_start = self.pos.copy()
-                    pos_start.col -= 1
-                else:
-                    string += "$"
-            elif in_code:
-                if self.current_char == "}":
-                    if len(code) > 0:
-                        lexer = Lexer(self.fn, code)
-                        tokens, error = lexer.make_tokens()
-                        if error: 
-                            old_pos_start = error.pos_start
-                            error.pos_start = pos_start
-                            error.pos_start.col += 2 + old_pos_start.col
-                            error.pos_end.col = self.pos.col
-                            error.pos_start.ftxt = self.pos.ftxt 
-                            return None, error
+    #     while self.current_char != None and (self.current_char != '`' or escape_character):
+    #         if escape_character:
+    #             string += escape_characters.get(self.current_char, self.current_char)
+    #             escape_character = False
+    #         elif start_code:
+    #             if self.current_char == "{":
+    #                 in_code = True
+    #                 start_code = False
+    #                 pos_start = self.pos.copy()
+    #                 pos_start.col -= 1
+    #             else:
+    #                 string += "$"
+    #         elif in_code:
+    #             if self.current_char == "}":
+    #                 if len(code) > 0:
+    #                     lexer = Lexer(self.fn, code)
+    #                     tokens, error = lexer.make_tokens()
+    #                     if error: 
+    #                         old_pos_start = error.pos_start
+    #                         error.pos_start = pos_start
+    #                         error.pos_start.col += 2 + old_pos_start.col
+    #                         error.pos_end.col = self.pos.col
+    #                         error.pos_start.ftxt = self.pos.ftxt 
+    #                         return None, error
 
-                        parser = Parser(tokens)
-                        ast = parser.parse()
-                        if ast.error:
-                            old_pos_start = ast.error.pos_start
-                            ast.error.pos_start = pos_start
-                            ast.error.pos_start.col += 2 + old_pos_start.col
-                            ast.error.pos_end.col = self.pos.col
-                            ast.error.pos_start.ftxt = self.pos.ftxt 
-                            return None, ast.error
+    #                     parser = Parser(tokens)
+    #                     ast = parser.parse()
+    #                     if ast.error:
+    #                         old_pos_start = ast.error.pos_start
+    #                         ast.error.pos_start = pos_start
+    #                         ast.error.pos_start.col += 2 + old_pos_start.col
+    #                         ast.error.pos_end.col = self.pos.col
+    #                         ast.error.pos_start.ftxt = self.pos.ftxt 
+    #                         return None, ast.error
 
-                        interpreter = Interpreter()
-                        context = Context('String')
+    #                     interpreter = Interpreter()
+    #                     context = Context('String')
 
-                        from BananaLang import global_symbol_table
+    #                     from BananaPlus import global_symbol_table
 
-                        context.symbol_table = global_symbol_table
-                        result = interpreter.visit(ast.node, context)
+    #                     context.symbol_table = global_symbol_table
+    #                     result = interpreter.visit(ast.node, context)
 
-                        if result.error:
-                            old_pos_start = result.error.pos_start
-                            result.error.pos_start = pos_start
-                            result.error.pos_start.col += 2 + old_pos_start.col
-                            result.error.pos_end.col = self.pos.col
-                            result.error.pos_start.ftxt = self.pos.ftxt 
-                            return None, result.error
+    #                     if result.error:
+    #                         old_pos_start = result.error.pos_start
+    #                         result.error.pos_start = pos_start
+    #                         result.error.pos_start.col += 2 + old_pos_start.col
+    #                         result.error.pos_end.col = self.pos.col
+    #                         result.error.pos_start.ftxt = self.pos.ftxt 
+    #                         return None, result.error
 
-                        if isinstance(result.value, String):
-                            string += result.value.value
-                        else:
-                            string += "".join([str(i) for i in result.value.elements]) 
-                    in_code = False
-                    code = ''
-                else:
-                    code += self.current_char
-            else:
-                if self.current_char == "\\":
-                    escape_character = True
-                elif self.current_char == "$":
-                    start_code = True
-                else:
-                    string += self.current_char
-            self.advance()
+    #                     if isinstance(result.value, String):
+    #                         string += result.value.value
+    #                     else:
+    #                         string += "".join([str(i) for i in result.value.elements]) 
+    #                 in_code = False
+    #                 code = ''
+    #             else:
+    #                 code += self.current_char
+    #         else:
+    #             if self.current_char == "\\":
+    #                 escape_character = True
+    #             elif self.current_char == "$":
+    #                 start_code = True
+    #             else:
+    #                 string += self.current_char
+    #         self.advance()
 
-        if start_code: string += "$"
-        if in_code: return None, InvalidSyntaxError(pos_start, self.pos.copy(), "Expected '}'")
+    #     if start_code: string += "$"
+    #     if in_code: return None, InvalidSyntaxError(pos_start, self.pos.copy(), "Expected '}'")
 
-        self.advance()
+    #     self.advance()
 
-        return Token(TT_STRING, string, pos_start, self.pos), None
+    #     return Token(TT_STRING, string, pos_start, self.pos), None
 
     def make_identifier(self):
         id_str = ''

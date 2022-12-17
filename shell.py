@@ -1,9 +1,9 @@
-import BananaLang
+import BananaPlus
 
 while True:
     text = input("BananaLang> ")
     if text.strip() == "": continue
-    result, error = BananaLang.run("<console>", text)
+    result, error = BananaPlus.run("<console>", text)
 
     if error: 
         print(error.as_string())
