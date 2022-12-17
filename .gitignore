@@ -1,2 +1,3 @@
 **/__pycache__/
-*.bl
+*.bp
+.vs
