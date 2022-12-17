@@ -15,6 +15,7 @@ lib_dir = os.path.dirname(os.path.realpath(__file__))
 
 file_id = ".bp"
 
+
 built_in.register_var(global_symbol_table)
 
 def run(fn, text):
