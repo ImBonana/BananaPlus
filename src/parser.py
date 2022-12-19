@@ -48,7 +48,7 @@ class Parser:
 
             self.advance()
             
-            return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, "Expected '.', '+', '-', '*', '/', '^', '==', '!=', '<', '>', <=', '>=', 'AND' or 'OR'"))
+            return res.failure(InvalidSyntaxError(self.current_tok.pos_start, self.current_tok.pos_end, f"Expected '.', '+', '-', '*', '/', '^', '==', '!=', '<', '>', <=', '>=', '{KEYWORDS.AND}' or '{KEYWORDS.OR}'"))
         return res
 
     def statements(self):
@@ -239,7 +239,7 @@ class Parser:
         if self.current_tok.type != TT_NEWLINE:
             return res.failure(InvalidSyntaxError(
                 self.current_tok.pos_start, self.current_tok.pos_end,
-                f"Expected '=>' or NEWLINE"
+                f"Expected '=>' or new line"
             ))
 
         res.register_advancement()

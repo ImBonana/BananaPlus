@@ -408,20 +408,21 @@ class Interpreter:
 
         path = lib_name
 
-        from BananaPlus import workspace_dir, lib_dir
-
-        if lib_name.endswith(".bl"):
+        from BananaPlus import workspace_dir, lib_dir, file_id
+        print(workspace_dir)
+        if lib_name.endswith(file_id):
             path = workspace_dir
             path += "\\"
             path += lib_name
         else:
             path = lib_dir
             path += "\\"
-            path += lib_name + ".bl"
+            path += lib_name + file_id
 
         try:
             with open(path, "r") as f:
                 script = f.read()
+                f.close()
         except Exception as e:
             return RTResult().failure(RTError(
                 node.pos_start, node.pos_end,

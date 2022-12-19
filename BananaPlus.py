@@ -1,20 +1,40 @@
+import sys
+import os
+import pathlib
+file_id = ".bp"
+data_path = os.path.dirname(os.path.realpath(__file__))
+
+workspace_dir = data_path
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        file_name = sys.argv[1]
+        if file_name.endswith(file_id):
+            try:
+                with open(data_path + "\\current_workspace.txt", "w") as f:
+                    workspace_dir = f.write(os.path.dirname(os.path.abspath(file_name)))
+                    f.close()
+            except Exception as e:
+                workspace_dir = os.path.dirname(os.path.realpath(__file__))
+
+if os.path.exists(data_path + "\\current_workspace.txt"):
+    try:
+        with open(data_path + "\\current_workspace.txt", "r") as f:
+            workspace_dir = f.read()
+            f.close()
+    except:
+        workspace_dir = os.path.dirname(os.path.realpath(__file__))
+        
 from src.lexer import Lexer
 from src.parser import Parser
 from src.interpreter import Interpreter
 from src.errors import Context
 from src.symbol_table import SymbolTable
-import src.types as types
 import src.built_in as built_in
-import os
 
 global_symbol_table = SymbolTable()
 
-workspace_dir = os.path.dirname(os.path.realpath(__file__))
-
-lib_dir = os.path.dirname(os.path.realpath(__file__))
-
-file_id = ".bp"
-
+lib_dir = pathlib.Path.home().drive + "\\BananaPlus\\libs"
 
 built_in.register_var(global_symbol_table)
 
@@ -57,3 +77,17 @@ def import_lib(fn, text):
     built_in.unregister_var(lib_symbol_table)
 
     return lib_symbol_table.symbols, result.value, result.error
+
+# run file
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        file_name = sys.argv[1]
+        if file_name.endswith(file_id):
+            try:
+                with open(file_name, "r") as f:
+                    script = f.read()
+
+                vlaue, error = run(file_name, script)
+                if error: print(error.as_string())
+            except Exception as e:
+                print(e)
