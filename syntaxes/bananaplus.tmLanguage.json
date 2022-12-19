@@ -3,6 +3,10 @@
 	"name": "BananaPlus Programming Language",
 	"patterns": [
 		{
+			"match": "//.*",
+			"name": "comment.line.double-slash.bananaplus"
+		},
+		{
 			"include": "#keywords"
 		},
 		{
@@ -17,15 +21,9 @@
 		{
 			"include": "#numbers"
 		},
-		{
-			"include": "#brackets"
-		},
+		
 		{
 			"include": "#functions"
-		},
-		{
-			"match": "//.*",
-			"name": "comment.line.double-slash.bananaplus"
 		},
 		{
 			"include": "#vars"
@@ -43,7 +41,7 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.operator.arithmetic.js",
-				"match": "\\b(then|end|if|elif|else|while|for|step|to|break|return|continue|switch|case|default|var|import|as|func)\\b"
+				"match": "\\b(then|end|if|elif|else|while|for|step|to|break|return|continue|switch|case|default|let|import|as|func)\\b"
 			}]
 		},
 		"d_strings": {
@@ -84,52 +82,6 @@
 				}
 			]
 		},
-		"brackets": {
-			"patterns": [
-				{
-					"begin": "{",
-					"beginCaptures": {
-						"0": {
-							"name": "punctuation.definition.bracket.curly.begin.bananaplus"
-						}
-					},
-					"end": "}",
-					"endCaptures": {
-						"0": {
-							"name": "punctuation.definition.bracket.curly.end.bananaplus"
-						}
-					}
-				},
-				{
-					"begin": "\\(",
-					"beginCaptures": {
-						"0": {
-							"name": "punctuation.definition.bracket.round.begin.bananaplus"
-						}
-					},
-					"end": "\\)",
-					"endCaptures": {
-						"0": {
-							"name": "punctuation.definition.bracket.round.end.bananaplus"
-						}
-					}
-				},
-				{
-					"begin": "\\[",
-					"beginCaptures": {
-						"0": {
-							"name": "punctuation.definition.bracket.square.begin.bananaplus"
-						}
-					},
-					"end": "\\]",
-					"endCaptures": {
-						"0": {
-							"name": "punctuation.definition.bracket.square.end.bananaplus"
-						}
-					}
-				}
-			]
-		},
 		"functions": {
 			"begin": "([^\\s]+?\\()",
 			"end": "(?.\\))",
@@ -143,11 +95,11 @@
 				},
 				{
 					"name": "entity.name.type",
-					"match": "\\?"
+					"match": "(\\?|\\:)"
 				},
 				{
 					"name": "variable.name",
-					"match": "\\w+([^\\s\\.\\?]+)?"
+					"match": "\\w+([^\\s\\.\\?\\:]+)?"
 				}
 			]
 		}

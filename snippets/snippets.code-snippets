@@ -80,7 +80,7 @@
         "prefix": ["var"],
         "description": "New var",
         "body": [
-            "var ${1:i} = $2"
+            "let ${1:i} = $2"
         ]
     },
     "Import": {
