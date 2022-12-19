@@ -5,6 +5,9 @@
   "publisher": "ImBanana",
   "license": "MIT",
   "icon": "img/Logo-128x128px.png",
+  "repository": {
+    "url": "https://github.com/pronoob742/BananaPlus/tree/BananaPlus-vs-code"
+  },
   "version": "0.1.0",
   "engines": {
     "vscode": "^1.74.0"
