@@ -1,0 +1,156 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "BananaPlus Programming Language",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#d_strings"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#logic"
+		},
+		{
+			"include": "#numbers"
+		},
+		{
+			"include": "#brackets"
+		},
+		{
+			"include": "#functions"
+		},
+		{
+			"match": "//.*",
+			"name": "comment.line.double-slash.bananaplus"
+		},
+		{
+			"include": "#vars"
+		}
+	],
+	"repository": {
+		"numbers": {
+			"patterns": [
+				{
+					"name": "constant.numeric",
+					"match": "([-0-9]+([0-9\\.]?))"
+				}
+			]
+		},
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.operator.arithmetic.js",
+				"match": "\\b(then|end|if|elif|else|while|for|step|to|break|return|continue|switch|case|default|var|import|as|func)\\b"
+			}]
+		},
+		"d_strings": {
+			"name": "string.quoted.double.bananaplus",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.bananaplus",
+					"match": "\\\\."
+				}
+			]
+		},
+		"strings": {
+			"name": "string.quoted.double.bananaplus",
+			"begin": "'",
+			"end": "'",
+			"patterns": [
+				{
+					"name": "constant.character.escape.bananaplus",
+					"match": "\\\\."
+				}
+			]
+		},
+		"logic": {
+			"patterns": [
+				{
+					"name": "keyword.operator.comparison.bananaplus",
+					"match": "\\b(or|and|not)\\b"
+				},
+				{
+					"name": "entity.name.type",
+					"match": "(<|<=|!=|==|>=|>|=>)"
+				},
+				{
+					"name": "entity.other.attribute-name",
+					"match": "\\b(true|false|null)\\b"
+				}
+			]
+		},
+		"brackets": {
+			"patterns": [
+				{
+					"begin": "{",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.bracket.curly.begin.bananaplus"
+						}
+					},
+					"end": "}",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.bracket.curly.end.bananaplus"
+						}
+					}
+				},
+				{
+					"begin": "\\(",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.bracket.round.begin.bananaplus"
+						}
+					},
+					"end": "\\)",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.bracket.round.end.bananaplus"
+						}
+					}
+				},
+				{
+					"begin": "\\[",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.bracket.square.begin.bananaplus"
+						}
+					},
+					"end": "\\]",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.bracket.square.end.bananaplus"
+						}
+					}
+				}
+			]
+		},
+		"functions": {
+			"begin": "([^\\s]+?\\()",
+			"end": "(?.\\))",
+			"name": "entity.name.function"
+		},
+		"vars": {
+			"patterns": [
+				{
+					"name": "entity.name.type",
+					"match": "(?<=\\bas\\s)(\\w+)"
+				},
+				{
+					"name": "entity.name.type",
+					"match": "\\?"
+				},
+				{
+					"name": "variable.name",
+					"match": "\\w+([^\\s\\.\\?]+)?"
+				}
+			]
+		}
+	},
+	"scopeName": "source.bp"
+}

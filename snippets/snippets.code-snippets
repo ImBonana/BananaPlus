@@ -1,0 +1,93 @@
+{
+    "For Loop": {
+        "prefix": ["for"],
+        "description": "A for loop",
+        "body": [
+            "for ${1:i} = ${2:0} to ${3:10} then\n\t$4\nend"
+        ]
+    },
+    "For Loop step": {
+        "prefix": ["for-step"],
+        "description": "A for loop with steps",
+        "body": [
+            "for ${1:i} = ${2:0} to ${3:10} step {$4:1} then\n\t$5\nend"
+        ]
+    },
+    "If": {
+        "prefix": ["if"],
+        "description": "If statement",
+        "body": [
+            "if ${1:true} then\n\t$2\nend"
+        ]
+    },
+    "If else": {
+        "prefix": ["if-else"],
+        "description": "If else statement",
+        "body": [
+            "if ${1:true} then\n\t$2\nelse\n\t$3\nend"
+        ]
+    },
+    "If elif": {
+        "prefix": ["if-elif"],
+        "description": "If elif statement",
+        "body": [
+            "if ${1:true} then\n\t$2\nelif ${3:true} then\n\t$4\nend"
+        ]
+    },
+    "If elif else": {
+        "prefix": ["if-elif-else"],
+        "description": "if elif else statement",
+        "body": [
+            "if ${1:true} then\n\t$2\nelif ${3:true} then\n\t$4\nelse\n\t$5\nend"
+        ]
+    },
+    "Switch": {
+        "prefix": ["switch"],
+        "description": "Switch statement",
+        "body": [
+            "switch $1 then\n\tcase $2 then\n\t\t$3\n\tend\nend"
+        ]
+    },
+    "Switch default": {
+        "prefix": ["switch-default"],
+        "description": "Switch default statement",
+        "body": [
+            "switch $1 then\n\tcase $2 then\n\t\t$3\n\tend\n\n\tdefault\n\t\t$4\n\tend\nend"
+        ]
+    },
+    "While loop": {
+        "prefix": ["while"],
+        "description": "A While loop",
+        "body": [
+            "while ${1:true} then\n\t$2\nend"
+        ]
+    },
+    "function": {
+        "prefix": ["function"],
+        "description": "A function",
+        "body": [
+            "func $1($2)\n\t$3\nend"
+        ]
+    },
+    "function inline": {
+        "prefix": ["function-line"],
+        "description": "A line function",
+        "body": [
+            "func ($1) => $2"
+        ]
+    },
+    "var": {
+        "prefix": ["var"],
+        "description": "New var",
+        "body": [
+            "var ${1:i} = $2"
+        ]
+    },
+    "Import": {
+        "prefix": ["import"],
+        "description": "Import file",
+        "body": [
+            "import \"$1\" as ${2:lib}"
+        ]
+    }
+}

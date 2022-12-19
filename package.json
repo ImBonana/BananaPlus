@@ -1,0 +1,39 @@
+{
+  "name": "bananaplus",
+  "displayName": "BananaPlus",
+  "description": "BananaPlus programming language support",
+  "publisher": "ImBanana",
+  "license": "MIT",
+  "icon": "img/Logo-128x128px.png",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "bananaplus",
+      "aliases": ["BananaPlus Programming Language", "bananaplus"],
+      "extensions": [".bp"],
+      "configuration": "./language-configuration.json",
+      "icon": {
+        "dark": "./img/file-icon-512x512px.png",
+        "light": "./img/file-icon-512x512px.png"
+      }
+    }],
+    "grammars": [{
+      "language": "bananaplus",
+      "scopeName": "source.bp",
+      "path": "./syntaxes/bananaplus.tmLanguage.json"
+    }],
+    "snippets": [
+      {
+        "language": "bananaplus",
+        "path": "./snippets/snippets.code-snippets"
+      }
+    ]
+  }
+}
