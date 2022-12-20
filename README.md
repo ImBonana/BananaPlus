@@ -3,15 +3,15 @@
 ## Introduction
 BananaPlus is a custom programming language that i made with Python. BananaPlus scripts have the file extension '.bp'.
 
-## Documentation and getting started:
-[The docs and tutorial](https://spazelectro.github.io/ZSharpDocs/#/README)
-
 ## Installation
 Downloading or installing is very simple, ONLY FOR WINDOWS:
 ### Windows
 1. Navigate to [the most recent release](https://github.com/pronoob742/BananaPlus/releases) and download `BananaPlus_setup.exe`.
 2. Open the file `BananaPlus_setup.exe` and follow the steps.
 3. Inside is a single file titled `ZSharp-Setup.exe`. Run it, and follow the setup instructions.
+
+## Vs Code
+If you use vs code you can download [BananaPlus Vs Extension](https://marketplace.visualstudio.com/items?itemName=ImBanana.bananaplus)
 
 ## Library
 You can add any .bp files in location "C:\BananaPlus\libs".<br>
