@@ -1,4 +1,4 @@
-### BananaPlus
+# BananaPlus
 
 ## Introduction
 BananaPlus is a custom programming language that i made with Python. BananaPlus scripts have the file extension '.bp'.
