@@ -8,10 +8,16 @@ Downloading or installing is very simple, ONLY FOR WINDOWS:
 ### Windows
 1. Navigate to [the most recent release](https://github.com/pronoob742/BananaPlus/releases) and download `BananaPlus_setup.exe`.
 2. Open the file `BananaPlus_setup.exe` and follow the steps.
-3. Inside is a single file titled `ZSharp-Setup.exe`. Run it, and follow the setup instructions.
+3. Inside is a single file titled `BananaPlus_setup.exe`. Run it, and follow the setup instructions.
 
 ## Vs Code
 If you use vs code you can download [BananaPlus Vs Extension](https://marketplace.visualstudio.com/items?itemName=ImBanana.bananaplus)
+
+##  How to run
+Open command line and type `BananaPlus <path>`.<br>
+To open the `BananaPlus` console:
+1. Open command line.
+2. Run the command `BananaPlus-Console`.
 
 ## Library
 You can add any .bp files in location "C:\BananaPlus\libs".<br>
