@@ -2,6 +2,7 @@ from src.types import Number, Boolean, Null, Function, String, List, Object
 from src.results import RTResult
 from src.rt_types import *
 from src.errors import RTError
+import copy
 
 class Interpreter:
     def visit(self, node, context):
@@ -52,7 +53,9 @@ class Interpreter:
         res = RTResult()
         var_name = node.var_name_tok.value
         value = context.symbol_table.get(var_name)
-
+        if isinstance(value, tuple):
+            value, public = value
+    
         if not value:
             return res.failure(
                 RTError(
@@ -62,17 +65,22 @@ class Interpreter:
                 )
             )
 
-        value = value.copy().set_pos(node.pos_start, node.pos_end).set_context(context)
+        value = value.copy().set_pos(context).set_context(context)
         return res.success(value)
 
     def visit_VarAssignNode(self, node, context):
         res = RTResult()
         var_name = node.var_name_tok.value
         update = node.update
+        assign_type = node.assign_type
+        isPublic = node.public
+        value = res.register(self.visit(node.value_node, context))
+        if res.should_return(): return res
 
         if update:
             u_value = context.symbol_table.get(var_name)
-            
+            if isinstance(u_value, tuple):
+                u_value, public = u_value
             if not u_value:
                 return res.failure(
                     RTError(
@@ -81,11 +89,17 @@ class Interpreter:
                         context
                     )
                 )
+            
+            if assign_type == TT_PE:
+                result, error = u_value.added_to(value)
+                if error: return res.failure(error)
+                value = result
+            elif assign_type == TT_ME:
+                result, error = u_value.subbed_by(value)
+                if error: return res.failure(error)
+                value = result
 
-        value = res.register(self.visit(node.value_node, context))
-        if res.should_return(): return res
-
-        context.symbol_table.set(var_name, value)
+        context.symbol_table.set(var_name, (value, isPublic))
         return res.success(value)
 
     def visit_MultiVarAccessNode(self, node, context):
@@ -98,9 +112,13 @@ class Interpreter:
 
             if current_value == None:
                 value = context.symbol_table.get(var_name[0].value)
+                if isinstance(value, tuple):
+                    value, public = value
             else:
                 if isinstance(current_value, Object):
                     value = current_value.elements.get(var_name[0].value, None)
+                    if isinstance(value, tuple):
+                        value, public = value
                 else:
                     value = current_value.built_in.get(var_name[0].value, None)
 
@@ -114,13 +132,14 @@ class Interpreter:
                 )
             
             current_value = value
-
+        
         current_value = current_value.copy().set_pos(node.pos_start, node.pos_end).set_context(context)
         return res.success(current_value)
 
     def visit_MultiVarAssignNode(self, node, context):
         res = RTResult()
         var_names = node.var_name_toks
+        assign_type = node.assign_type
 
         current_value = None
         i = 0
@@ -128,6 +147,8 @@ class Interpreter:
             i += 1
             if current_value == None:
                 value = context.symbol_table.get(var_name[0].value)
+                if isinstance(value, tuple):
+                    value, public = value
 
                 if not isinstance(value, Object):
                     return res.failure(
@@ -139,6 +160,8 @@ class Interpreter:
                     )
             else:
                 value = current_value.elements.get(var_name[0].value, None)
+                if isinstance(value, tuple):
+                    value, public = value
 
             if not value:
                 return res.failure(
@@ -153,7 +176,24 @@ class Interpreter:
 
             if len(var_names)-1 == i:
                 try:
-                    current_value.elements[var_names[len(var_names)-1][0].value] = res.register(self.visit(node.value_node, context))
+                    new_value = res.register(self.visit(node.value_node, context))
+                    isTuple = False
+                    t_value = current_value.elements[var_names[len(var_names)-1][0].value]
+                    if isinstance(t_value, tuple):
+                        t_value, public = t_value
+                        isTuple = True
+                    if assign_type == TT_PE:
+                        result, error = t_value.added_to(new_value)
+                        if error: return res.failure(error)
+                        new_value = result
+                    elif assign_type == TT_ME:
+                        result, error = t_value.subbed_by(new_value)
+                        if error: return res.failure(error)
+                        new_value = result
+                    if isTuple:
+                        current_value.elements[var_names[len(var_names)-1][0].value] = (new_value, public)
+                    else:
+                        current_value.elements[var_names[len(var_names)-1][0].value] = new_value
                 except:
                     return res.failure(
                     RTError(
@@ -358,10 +398,11 @@ class Interpreter:
 
         func_name = node.var_name_tok.value if node.var_name_tok else None
         body_node = node.body_node
-        func_value = Function(func_name, body_node, node.arg_name_toks, node.should_auto_return).set_context(context).set_pos()
+        isPublic = node.public
+        func_value = Function(func_name, body_node, node.arg_name_toks, node.should_auto_return, isPublic, context).set_context(context).set_pos(node.pos_start, node.pos_end)
 
         if node.var_name_tok:
-            context.symbol_table.set(func_name, func_value)
+            context.symbol_table.set(func_name, (func_value))
 
         return res.success(func_value)
     
@@ -372,9 +413,8 @@ class Interpreter:
         value_to_call = res.register(self.visit(node.node_to_call, context))
         if res.should_return(): return res
         value_to_call = value_to_call.copy().set_pos(node.pos_start, node.pos_end)
-
         for arg_node in node.arg_nodes:
-            args.append(res.register(self.visit(arg_node, context)))
+            args.append(res.register(self.visit(arg_node, value_to_call.lib if isinstance(value_to_call, Function) else context)))
             if res.should_return(): return res
 
         return_value = res.register(value_to_call.execute(args))
@@ -409,7 +449,6 @@ class Interpreter:
         path = lib_name
 
         from BananaPlus import workspace_dir, lib_dir, file_id
-        print(workspace_dir)
         if lib_name.endswith(file_id):
             path = workspace_dir
             path += "\\"
@@ -432,7 +471,7 @@ class Interpreter:
         
         from BananaPlus import import_lib
 
-        vars, result, error = import_lib(lib_name, script)
+        symbol_table, result, error = import_lib(lib_name, script)
 
         if error:
             return RTResult().failure(RTError(
@@ -441,7 +480,17 @@ class Interpreter:
                 context
             ))
 
-        context.symbol_table.set(var_name, Object(vars))
+        items_to_push = {}
+
+        for key, value in symbol_table.symbols.items():
+            if isinstance(value, Function):
+                if value.isPublic:
+                    items_to_push[key] = value
+            elif isinstance(value, tuple):
+                if value[1] == True:
+                    items_to_push[key] = value
+
+        context.symbol_table.set(var_name, Object(items_to_push))
 
         return RTResult().success(Null().set_context(context).set_pos(node.pos_start, node.pos_end))
     

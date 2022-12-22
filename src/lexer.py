@@ -35,11 +35,9 @@ class Lexer:
             elif self.current_char in ('"', "'"):
                 tokens.append(self.make_string())
             elif self.current_char == "+":
-                tokens.append(Token(TT_PLUS, pos_start=self.pos))
-                self.advance()
+                tokens.append(self.make_plus())
             elif self.current_char == "-":
-                tokens.append(Token(TT_MINUS, pos_start=self.pos))
-                self.advance()
+                tokens.append(self.make_minus())
             elif self.current_char == "*":
                 tokens.append(Token(TT_MUL, pos_start=self.pos))
                 self.advance()
@@ -219,5 +217,27 @@ class Lexer:
         if self.current_char == "=":
             self.advance()
             tok_type = TT_GTE
+
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
+
+    def make_plus(self):
+        tok_type = TT_PLUS
+        pos_start = self.pos.copy()
+        self.advance()
+
+        if self.current_char == "=":
+            self.advance()
+            tok_type = TT_PE
+
+        return Token(tok_type, pos_start=pos_start, pos_end=self.pos)
+    
+    def make_minus(self):
+        tok_type = TT_MINUS
+        pos_start = self.pos.copy()
+        self.advance()
+
+        if self.current_char == "=":
+            self.advance()
+            tok_type = TT_ME
 
         return Token(tok_type, pos_start=pos_start, pos_end=self.pos)

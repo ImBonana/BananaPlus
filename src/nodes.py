@@ -48,18 +48,21 @@ class VarAccessNode:
 		self.pos_end = self.var_name_tok.pos_end
 
 class VarAssignNode:
-	def __init__(self, var_name_tok, value_node, update=False):
+	def __init__(self, var_name_tok, value_node, assign_type, public, update=False):
 		self.var_name_tok = var_name_tok
 		self.value_node = value_node
+		self.assign_type = assign_type
+		self.public = public
 		self.update = update
 
 		self.pos_start = self.var_name_tok.pos_start
 		self.pos_end = self.value_node.pos_end
 
 class MultiVarAssignNode:
-	def __init__(self, var_name_toks, value_node):
+	def __init__(self, var_name_toks, value_node, assign_type):
 		self.var_name_toks = var_name_toks
 		self.value_node = value_node
+		self.assign_type = assign_type
 
 		self.pos_start = self.var_name_toks[0][1]
 		self.pos_end = self.value_node.pos_end
@@ -133,11 +136,12 @@ class WhileNode:
 		self.pos_end = self.body_node.pos_end
 
 class FuncDefNode:
-	def __init__(self, var_name_tok, arg_name_toks, body_node, should_auto_return):
+	def __init__(self, var_name_tok, arg_name_toks, body_node, should_auto_return, public):
 		self.var_name_tok = var_name_tok
 		self.arg_name_toks = arg_name_toks
 		self.body_node = body_node
 		self.should_auto_return = should_auto_return
+		self.public = public
 
 		if self.var_name_tok:
 			self.pos_start = self.var_name_tok.pos_start

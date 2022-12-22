@@ -31,6 +31,7 @@ from src.interpreter import Interpreter
 from src.errors import Context
 from src.symbol_table import SymbolTable
 import src.built_in as built_in
+import src.types as types
 
 global_symbol_table = SymbolTable()
 
@@ -74,9 +75,7 @@ def import_lib(fn, text):
 
     result = interpreter.visit(ast.node, context)
 
-    built_in.unregister_var(lib_symbol_table)
-
-    return lib_symbol_table.symbols, result.value, result.error
+    return lib_symbol_table, result.value, result.error
 
 # run file
 if __name__ == "__main__":

@@ -11,6 +11,8 @@ TT_MUL = "MUL"
 TT_DIV = "DIV"
 TT_POW = "POW"
 TT_EQ = "EQ"
+TT_PE = "PE"
+TT_ME = "ME"
 TT_COLON = "COLON"
 TT_DOT = "DOT"
 TT_QM = "QM"
@@ -70,7 +72,8 @@ class keyWordsClass:
         self.SWITCH = "switch"
         self.CASE = "case"
         self.DEFAULT = "default"
-
+        self.PUBLIC = "public"
+        self.PRIVATE = "private"
 
 KEYWORDS = keyWordsClass()
 
@@ -99,5 +102,7 @@ KEYWORDS_LIST = [
     KEYWORDS.AS,
     KEYWORDS.SWITCH,
     KEYWORDS.CASE,
-    KEYWORDS.DEFAULT
+    KEYWORDS.DEFAULT,
+    KEYWORDS.PUBLIC,
+    KEYWORDS.PRIVATE
 ]

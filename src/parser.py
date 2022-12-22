@@ -15,9 +15,11 @@ class Parser:
         self.update_current_tok()
         return self.current_tok
 
-    def deadvance(self):
+    def deadvance(self, ignore_newline=False):
         self.tok_idx -= 1
         self.update_current_tok()
+        if self.current_tok.type == TT_NEWLINE and ignore_newline:
+            return self.deadvance()
         return self.current_tok
 
     def skip_newline(self, res=None):
@@ -131,6 +133,8 @@ class Parser:
                 f"Expected '{KEYWORDS.FUNCTION}'"
             ))
 
+        isPublic = self.isPublic()
+
         res.register_advancement()
         self.advance()
 
@@ -233,7 +237,8 @@ class Parser:
                 var_name_tok,
                 arg_name_toks,
                 body,
-                True
+                True,
+                isPublic
             ))
 
         if self.current_tok.type != TT_NEWLINE:
@@ -261,7 +266,8 @@ class Parser:
             var_name_tok,
             arg_name_toks,
             body,
-            False
+            False,
+            isPublic
         ))
 
     def if_expr(self):
@@ -704,14 +710,14 @@ class Parser:
 
         res.register_advancement()
         self.advance()
-
-        if self.current_tok.type == TT_EQ:
+        if self.current_tok.type in (TT_EQ, TT_PE, TT_ME):
+            var_assign_type = self.current_tok.type
             res.register_advancement()
             self.advance()
 
             expr = res.register(self.expr())
             if res.error: return res
-            return res.success(VarAssignNode(var_name, expr, True))
+            return res.success(VarAssignNode(var_name, expr, var_assign_type, False, True))
         elif self.current_tok.type == TT_DOT:
             var_names = []
 
@@ -731,17 +737,17 @@ class Parser:
 
                 res.register_advancement()
                 self.advance()
-
-            if self.current_tok.type == TT_EQ:
+            
+            if self.current_tok.type in (TT_EQ, TT_PE, TT_ME):
+                var_assign_type = self.current_tok.type
                 res.register_advancement()
                 self.advance()
 
                 expr = res.register(self.expr())
                 if res.error: return res
-                return res.success(MultiVarAssignNode(var_names, expr))
+                return res.success(MultiVarAssignNode(var_names, expr, var_assign_type))
             
             return res.success(MultiVarAccessNode(var_names))
-
 
         return res.success(VarAccessNode(var_name))
 
@@ -896,6 +902,23 @@ class Parser:
 
         return res.success(SwitchNode(value_node, cases, default, pos_start, self.current_tok.pos_end.copy()))
 
+    def private_and_public_expr(self):
+        res = ParseResult()
+        
+        res.register_advancement()
+        self.advance()
+
+        if not self.current_tok.matches(TT_KEYWORD, KEYWORDS.VAR) and not self.current_tok.matches(TT_KEYWORD, KEYWORDS.FUNCTION):
+            return res.failure(InvalidSyntaxError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                f"Expected '{KEYWORDS.VAR}' or '{KEYWORDS.FUNCTION}'"
+            ))
+            
+        expr = res.register(self.expr())
+        if res.error: return res
+
+        return res.success(expr)
+
     def atom(self):
         res = ParseResult()
         tok = self.current_tok
@@ -969,6 +992,10 @@ class Parser:
             switch_expr = res.register(self.switch_expr())
             if res.error: return res
             return res.success(switch_expr)
+        elif tok.matches(TT_KEYWORD, KEYWORDS.PRIVATE) or tok.matches(TT_KEYWORD, KEYWORDS.PUBLIC):
+            private_and_public_expr = res.register(self.private_and_public_expr())
+            if res.error: return res
+            return res.success(private_and_public_expr)
 
         return res.failure(InvalidSyntaxError(tok.pos_start, tok.pos_end, f"Expected '{KEYWORDS.IF}', '{KEYWORDS.FOR}', '{KEYWORDS.WHILE}', '{KEYWORDS.FUNCTION}', int, float, list, boolean, null, identifier, '+', '-', '(', '{'{'}' or '['"))
     
@@ -1070,8 +1097,11 @@ class Parser:
         res = ParseResult()
 
         if self.current_tok.matches(TT_KEYWORD, KEYWORDS.VAR):
+            isPublic = self.isPublic()
             res.register_advancement()
             self.advance()
+
+            self.skip_newline(res)
 
             if self.current_tok.type != TT_IDENTIFIER:
                 return res.failure(InvalidSyntaxError(
@@ -1082,6 +1112,7 @@ class Parser:
             var_name = self.current_tok
             res.register_advancement()
             self.advance()
+            self.skip_newline(res)
 
             if self.current_tok.type != TT_EQ:
                 return res.failure(InvalidSyntaxError(
@@ -1091,9 +1122,10 @@ class Parser:
 
             res.register_advancement()
             self.advance()
+            self.skip_newline(res)
             expr = res.register(self.expr())
             if res.error: return res
-            return res.success(VarAssignNode(var_name, expr))
+            return res.success(VarAssignNode(var_name, expr, TT_EQ, isPublic))
 
         node = res.register(self.bin_op(self.comp_expr, ((TT_KEYWORD, KEYWORDS.AND), (TT_KEYWORD, KEYWORDS.OR))))
         if res.error: 
@@ -1121,3 +1153,15 @@ class Parser:
             left = BinOpNode(left, op_tok, right)
 
         return res.success(left)
+    
+    def isPublic(self):
+        self.deadvance()
+
+        if self.current_tok.matches(TT_KEYWORD, KEYWORDS.PUBLIC):
+            self.advance()
+            return True
+        elif self.current_tok.matches(TT_KEYWORD, KEYWORDS.PRIVATE):
+            self.advance()
+            return False
+        self.advance()
+        return False

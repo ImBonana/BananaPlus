@@ -14,3 +14,8 @@ class SymbolTable:
 
     def remove(self, name):
         del self.symbols[name]
+
+    def copy(self):
+        new_symbol_table = SymbolTable(self.parent)
+        new_symbol_table.symbols = self.symbols
+        return new_symbol_table

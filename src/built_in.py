@@ -204,6 +204,18 @@ class BuiltInFunction(BaseFunction):
         return RTResult().success(value)
     execute_Boolean.arg_names = [("value", False)]
 
+    def execute_toLowerCase(self, exec_ctx):
+        string = self.this
+        string.value = string.value.lower()
+        return RTResult().success(string)
+    execute_toLowerCase.arg_names = []        
+    
+    def execute_toUpperCase(self, exec_ctx):
+        string = self.this
+        string.value = string.value.upper()
+        return RTResult().success(string)
+    execute_toUpperCase.arg_names = []        
+
 
 BuiltInFunction.print = BuiltInFunction("print")
 BuiltInFunction.input = BuiltInFunction("input")

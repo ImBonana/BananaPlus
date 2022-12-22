@@ -23,8 +23,18 @@ To open the `BananaPlus` console:
 You can add any .bp files in location "C:\BananaPlus\libs".<br>
 To import libs:
 ```js
-// you dont need to add .bp in the end of the name
+// You dont need to add .bp in the end of the name
+// You can change the 'lib' to whatever you want
 import "lib_name" as lib
+
+// To access the variable from other file you need to add the 'public' keyword
+public let a = "You Can See Me"
+
+// You can add 'private' keyword before
+// By default, all variables are private
+private let b = "You cannot see me"
+
+// you can to the same to function
 ```
 
 ## this is the main things in the language
@@ -37,7 +47,14 @@ import "file_name.bp" as lib
 
 // you can define variables
 // you can use them any place in the file
-let a = "Hello"
+let a = 1
+
+// you can use
+a -= 1
+a += 1
+// instead of
+a = a - 1
+a = a + 1
 
 // Use if statement to check values
 if a == "Hello" then
