@@ -7,6 +7,9 @@
 			"name": "comment.line.double-slash.bananaplus"
 		},
 		{
+			"include": "#math"
+		},
+		{
 			"include": "#keywords"
 		},
 		{
@@ -21,7 +24,6 @@
 		{
 			"include": "#numbers"
 		},
-		
 		{
 			"include": "#functions"
 		},
@@ -30,6 +32,14 @@
 		}
 	],
 	"repository": {
+		"math": {
+			"patterns": [
+				{
+					"name": "entity.other",
+					"match": "(\\+|\\-|\\*|\\/|\\-\\=|\\+\\=|\\=)"
+				}
+			]
+		},
 		"numbers": {
 			"patterns": [
 				{
@@ -41,7 +51,7 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.operator.arithmetic.js",
-				"match": "\\b(then|end|if|elif|else|while|for|step|to|break|return|continue|switch|case|default|let|import|as|func)\\b"
+				"match": "\\b(then|end|if|elif|else|while|for|step|to|break|return|continue|switch|case|default|let|import|as|func|public|private)\\b"
 			}]
 		},
 		"d_strings": {
@@ -83,7 +93,7 @@
 			]
 		},
 		"functions": {
-			"begin": "([^\\s]+?\\()",
+			"begin": "([^\\s\\.]+?\\()",
 			"end": "(?.\\))",
 			"name": "entity.name.function"
 		},
