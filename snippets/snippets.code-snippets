@@ -6,6 +6,20 @@
             "for ${1:i} = ${2:0} to ${3:10} then\n\t$4\nend"
         ]
     },
+    "For loop list": {
+        "prefix": ["for-list"],
+        "description": "A for loop for lists",
+        "body": [
+            "for list ${1:item} in ${2:myList} then\n\t$3\nend"
+        ]
+    },
+    "For loop object": {
+        "prefix": ["for-obj", "for-object"],
+        "description": "A for loop for objects",
+        "body": [
+            "for obj ${1:key}, ${2:value} in ${3:myObject} then\n\t$4\nend"
+        ]
+    },
     "For Loop step": {
         "prefix": ["for-step"],
         "description": "A for loop with steps",

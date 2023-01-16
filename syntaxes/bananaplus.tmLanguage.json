@@ -51,7 +51,7 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.operator.arithmetic.js",
-				"match": "\\b(then|end|if|elif|else|while|for|step|to|break|return|continue|switch|case|default|let|import|as|func|public|private)\\b"
+				"match": "\\b(then|end|if|elif|else|while|for|step|to|break|return|continue|switch|case|default|let|import|as|func|public|private|list|obj|in)\\b"
 			}]
 		},
 		"d_strings": {
@@ -105,11 +105,15 @@
 				},
 				{
 					"name": "entity.name.type",
+					"match": "^[A-Z](([a-zA-Z]|[0-9])+)?"
+				},
+				{
+					"name": "entity.name.type",
 					"match": "(\\?|\\:)"
 				},
 				{
 					"name": "variable.name",
-					"match": "\\w+([^\\s\\.\\?\\:]+)?"
+					"match": "\\w+([^\\s\\.\\?\\:\\,]+)?"
 				}
 			]
 		}
