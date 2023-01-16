@@ -7,6 +7,7 @@ from src.token import Token
 class Type:
     def __init__(self):
         self.value = None
+        self.elements = None
         self.built_in = {  }
         self.set_pos()
         self.set_context()
@@ -20,8 +21,20 @@ class Type:
         self.context = context
         return self
 
-    def dotted_to(self, other):
-        return self.built_in, None
+    def dotted_to(self, other, pos_start=None, pos_end=None):
+        if not pos_start: pos_start = self.pos_start
+        if not pos_end: pos_end = self.pos_end
+        if other in self.built_in:
+            return self.built_in.get(other, Null().set_context(self.context)), None
+        elif self.elements != None:
+            if isinstance(self.elements, object):
+                if other in self.elements:
+                    return self.elements.get(other, Null().set_context(self.context)), None
+        return None, RTError(
+                        pos_start, pos_end,
+                        f"'{other}' is not defined",
+                        self.context
+                    )
 
     def added_to(self, other):
         return None, self.illegal_operation(other)
@@ -80,9 +93,9 @@ class Type:
         copy.set_context(self.context)
         return copy
 
-    def illegal_operation(self, other=None):
+    def illegal_operation(self, other=None, show_type=True):
         if not other: other = self
-        return RTError(other.pos_start, other.pos_end, f"Can't do this operation with the type {type(other).__name__}", self.context)
+        return RTError(other.pos_start, other.pos_end, f"Can't do this operation{' with the type' + type(other).__name__ if show_type else ''}.", self.context)
 
     def __repr__(self):
         return str(self.value)
@@ -171,7 +184,19 @@ class String(Type):
         from src.built_in import BuiltInFunction
         self.built_in = { 
             "toLowerCase": BuiltInFunction("toLowerCase", self),
-            "toUpperCase": BuiltInFunction("toUpperCase", self)
+            "toUpperCase": BuiltInFunction("toUpperCase", self),
+            "replace": BuiltInFunction("replace", self),
+            "startsWith": BuiltInFunction("startsWith", self),
+            "endsWith": BuiltInFunction("endsWith", self),
+            "indexOf": BuiltInFunction("indexOf", self),
+            "isAllNum": BuiltInFunction("isAllNum", self),
+            "isAllAlpha": BuiltInFunction("isAllAlpha", self),
+            "isSpace": BuiltInFunction("isSpace", self),
+            "split": BuiltInFunction("split", self),
+            "trim": BuiltInFunction("trim", self),
+            "sub": BuiltInFunction("sub", self),
+            "includes": BuiltInFunction("includes", self),
+            "toLetters": BuiltInFunction("to_letters", self)
         }
 
     def added_to(self, other):
@@ -181,7 +206,7 @@ class String(Type):
             return String(self.value + KEYWORDS.NULL).set_context(self.context), None
         elif isinstance(other, List):
             return String(self.value + str(other.elements)).set_context(self.context), None
-        return String(self.value + str(other.value)).set_context(self.context), None
+        return String(self.value + str(other)).set_context(self.context), None
 
     def multed_by(self, other):
         if isinstance(other, Number):
@@ -353,6 +378,12 @@ class Object(Type):
         super().__init__()
         self.elements = elements
 
+        from src.built_in import BuiltInFunction
+        self.built_in = {
+            "set": BuiltInFunction("object_set", self),
+            "get": BuiltInFunction("object_get", self)
+        }
+
     def added_to(self, other):
         if isinstance(other, Object):
             new_object = self.copy()
@@ -372,6 +403,17 @@ class Object(Type):
             return new_object, None
         return None, Type.illegal_operation(self, other)
 
+    def dived_by(self, other):
+        if isinstance(other, String):
+            try:
+                return self.elements.get(other.value), None
+            except:
+                return None, RTError(
+                    other.pos_end, other.pos_end,
+                    "This element is not in the object",
+                    self.context
+                )
+        return None, Type.illegal_operation(self, other)
         
     def copy(self):
         copy = Object(self.elements)
@@ -442,10 +484,10 @@ class BaseFunction(Type):
             if isinstance(arg_name, Token):
                 arg_name = arg_names[i][0].value
 
-            if len(args) < len(arg_names) - i or len(args) < i:
+            if len(args)-1 < i:
                 arg_value = Null()
             else:
-                arg_value = args[i-1]
+                arg_value = args[i]
 
             arg_value.set_context(exec_ctx)
             exec_ctx.symbol_table.set(arg_name, arg_value)

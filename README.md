@@ -28,11 +28,11 @@ To import libs:
 import "lib_name" as lib
 
 // To access the variable from other file you need to add the 'public' keyword
-public let a = "You Can See Me"
+public let a = "You can see me"
 
 // You can add 'private' keyword before
 // By default, all variables are private
-private let b = "You cannot see me"
+private let b = "You can't see me"
 
 // you can to the same to function
 ```
@@ -58,37 +58,37 @@ a = a + 1
 
 // Use if statement to check values
 if a == "Hello" then
-  print("Is hello")
+    print("Is hello")
 else
-  print("idk")
+    print("idk")
 end
 
 // you can have a switch statment
 switch "a" then
-  case "b" then
-    print("its b")
-  end
+    case "b" then
+        print("its b")
+    end
   
-  case "a" then
-    print("its a")
-  end
+    case "a" then
+        print("its a")
+    end
   
-  default
-    print("idk")
-  end
+    default
+        print("idk")
+    end
 end
 
 // You can have for loop you can change the 'i' ro anything you want
 // the step key word is optinal
 for i = 0 to 10 step 2 then
-  print(i)
+    print(i)
 end
 
 // you can have while loop
 // you can change this to any condition
 //     v
 while true then
-  break
+    break
 end
 
 // prints staff

@@ -1,11 +1,7 @@
 from src.token import Token
 from src.position import Position
 from src.rt_types import *
-from src.errors import IllegalCharError, ExpectedCharError, Context, InvalidSyntaxError
-from src.parser import Parser
-from src.interpreter import Interpreter
-
-from src.types import String
+from src.errors import IllegalCharError, ExpectedCharError
 
 class Lexer:
     def __init__(self, fn, text):
@@ -98,8 +94,7 @@ class Lexer:
         tokens.append(Token(TT_EOF, pos_start=self.pos))
         return tokens, None
     
-    def skip_comment(self):
-        
+    def skip_comment(self):  
         self.advance()
 
         while self.current_char != '\n' and self.current_char != None:
@@ -115,7 +110,6 @@ class Lexer:
             self.skip_comment()
             return None, None
         
-        self.advance()
         return Token(TT_DIV, pos_start=pos_start), None
 
     def make_number(self):

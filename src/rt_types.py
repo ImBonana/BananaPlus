@@ -10,6 +10,7 @@ TT_MINUS = "MINUS"
 TT_MUL = "MUL"
 TT_DIV = "DIV"
 TT_POW = "POW"
+TT_CALL = "CALL"
 TT_EQ = "EQ"
 TT_PE = "PE"
 TT_ME = "ME"
@@ -59,8 +60,11 @@ class keyWordsClass:
         self.ELIF = "elif"
         self.ELSE = "else"
         self.FOR = "for"
+        self.FOR_OBJECT = "obj"
+        self.FOR_LIST = "list"
         self.TO = "to"
         self.STEP = "step"
+        self.IN = "in"
         self.WHILE = "while"
         self.FUNCTION = "func"
         self.END = "end"
@@ -90,8 +94,11 @@ KEYWORDS_LIST = [
     KEYWORDS.ELIF,
     KEYWORDS.ELSE,
     KEYWORDS.FOR,
+    KEYWORDS.FOR_OBJECT,
+    KEYWORDS.FOR_LIST,
     KEYWORDS.TO,
     KEYWORDS.STEP,
+    KEYWORDS.IN,
     KEYWORDS.WHILE,
     KEYWORDS.FUNCTION,
     KEYWORDS.END,

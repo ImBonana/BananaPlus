@@ -3,6 +3,7 @@ import math
 from src.results import RTResult
 import os
 from src.errors import RTError
+from src.rt_types import LETTERS_DIGITS, DIGITS
 
 class BuiltInFunction(BaseFunction):
     def __init__(self, name, this=None):
@@ -15,7 +16,6 @@ class BuiltInFunction(BaseFunction):
 
         method_name = f"execute_{self.name}"
         method = getattr(self, method_name, self.no_visit_method)
-
         res.register(self.check_and_populate_args(method.arg_names, args, exec_ctx))
         if res.should_return(): return res
 
@@ -215,7 +215,298 @@ class BuiltInFunction(BaseFunction):
         string.value = string.value.upper()
         return RTResult().success(string)
     execute_toUpperCase.arg_names = []        
+    
+    def execute_replace(self, exec_ctx):
+        string = self.this
+        find = exec_ctx.symbol_table.get("find")
+        replace = exec_ctx.symbol_table.get("replace")
 
+        if not isinstance(find, String) or not isinstance(replace, String):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "All arguments must be a string",
+                exec_ctx
+            ))
+
+        string.value = string.value.replace(find.value, replace.value)
+        return RTResult().success(string)
+    execute_replace.arg_names = [("find", False), ("replace", False)]
+
+    def execute_startsWith(self, exec_ctx):
+        string = self.this
+        char = exec_ctx.symbol_table.get("characters")
+        if not isinstance(char, String):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "First argument must be a string",
+                exec_ctx
+            ))
+        return RTResult().success(Boolean(string.value.startswith(char.value)))
+    execute_startsWith.arg_names = [("characters", False)]
+    
+    def execute_endsWith(self, exec_ctx):
+        string = self.this
+        char = exec_ctx.symbol_table.get("characters")
+        if not isinstance(char, String):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "First argument must be a string",
+                exec_ctx
+            ))
+        return RTResult().success(Boolean(string.value.endswith(char.value)))
+    execute_endsWith.arg_names = [("characters", False)]
+
+    def execute_indexOf(self, exec_ctx):
+        string = self.this
+        find = exec_ctx.symbol_table.get("find")
+        if not isinstance(find, String):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "First argument must be a string",
+                exec_ctx
+            ))
+        return RTResult().success(Number(string.value.find(find.value)))
+    execute_indexOf.arg_names = [("find", False)]
+
+    def execute_isAllNum(self, exec_ctx):
+        string = self.this
+        return RTResult().success(Boolean(string.value.isnumeric()))
+    execute_isAllNum.arg_names = []
+
+    def execute_isAllAlpha(self, exec_ctx):
+        string = self.this
+        return RTResult().success(Boolean(string.value.isalpha()))
+    execute_isAllAlpha.arg_names = []
+
+    def execute_isSpace(self, exec_ctx):
+        string = self.this
+        return RTResult().success(Boolean(string.value.isspace()))
+    execute_isSpace.arg_names = []
+
+    def execute_split(self, exec_ctx):
+        string = self.this
+        char = exec_ctx.symbol_table.get("character")
+        if not isinstance(char, String):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "First argument must be a string",
+                exec_ctx
+            ))
+
+        elements = []
+        for part in string.value.split(char.value):
+            elements.append(String(part))
+
+        return RTResult().success(List(elements))
+    execute_split.arg_names = [("character", False)]
+
+    def execute_trim(self, exec_ctx):
+        string = self.this
+        string.value = string.value.strip()
+        return RTResult().success(string)
+    execute_trim.arg_names = []
+
+    def execute_sub(self, exec_ctx):
+        string = self.this
+        pos = exec_ctx.symbol_table.get("position")
+        count = exec_ctx.symbol_table.get("count")
+        
+        if not isinstance(pos, Number) or not isinstance(count, Number):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "First and second argument must be a number",
+                exec_ctx
+            ))
+
+        if pos.value < 0 or pos.value >= len(string.value):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "First argument (Position) can't be below 0 and more than the string length",
+                exec_ctx
+            ))
+
+        if count.value < 1:
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "Decond argument (Count) can't be below 1",
+                exec_ctx
+            ))
+
+        string.value = string.value[:pos.value] + string.value[pos.value+count.value:]
+        return RTResult().success(string)
+    execute_sub.arg_names = [("position", False), ("count", False)]
+
+    def execute_includes(self, exec_ctx):
+        string = self.this
+        _str = exec_ctx.symbol_table.get("str")
+
+        if not isinstance(_str, String):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "First argument must be a string",
+                exec_ctx
+            ))
+
+        return RTResult().success(Boolean(_str.value in string.value))
+    execute_includes.arg_names = [("str", False)]
+
+    def execute_to_letters(self, exec_ctx):
+        string = self.this
+        
+        letter_list = []
+
+        for i in string.value:
+            letter_list.append(String(i))
+
+        return RTResult().success(List(letter_list))
+    execute_to_letters.arg_names = []
+
+    def execute_readFile(self, exec_ctx):
+        file_name = exec_ctx.symbol_table.get("file_name")
+        
+        if not isinstance(file_name, String):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "The argument must be a string",
+                exec_ctx
+            ))
+
+        from BananaPlus import workspace_dir
+
+        file_to_open = file_name
+
+        if file_name.value.startswith("./"):
+            file_to_open = workspace_dir + "\\" + file_name.value[2:].replace("/", "\\")
+        
+        try:
+            file =  open(file_to_open, 'r')
+            file_data = file.read()
+            file.close()
+            return RTResult().success(String(file_data))
+        except Exception as e:
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "Can't open that file",
+                exec_ctx
+            ))
+    execute_readFile.arg_names = [("file_name", False)]  
+    
+    def execute_writeFile(self, exec_ctx):
+        file_name = exec_ctx.symbol_table.get("file_name")
+        data = exec_ctx.symbol_table.get("data")
+
+        if not isinstance(file_name, String) or not isinstance(data, String):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "All arguments must be a string",
+                exec_ctx
+            ))
+
+        from BananaPlus import workspace_dir
+
+        file_to_open = file_name
+
+        if file_name.value.startswith("./"):
+            file_to_open = workspace_dir + "\\" + file_name.value[2:].replace("/", "\\")
+        
+        try:
+            file = open(file_to_open, 'w')
+            file.write(data.value)
+            file.close()
+            return RTResult().success(data.copy())
+        except Exception as e:
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "Can't write in that file",
+                exec_ctx
+            ))
+    execute_writeFile.arg_names = [("file_name", False), ("data", False)]
+
+    def execute_deleteFile(self, exec_ctx):
+        file_name = exec_ctx.symbol_table.get("file_name")
+        
+        if not isinstance(file_name, String):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "The argument must be a string",
+                exec_ctx
+            ))
+
+        from BananaPlus import workspace_dir
+
+        file_to_delete = file_name
+
+        if file_name.value.startswith("./"):
+            file_to_delete = workspace_dir + "\\" + file_name.value[2:].replace("/", "\\")
+        
+        if os.path.exists(file_to_delete):
+            try:
+                os.remove(file_to_delete)              
+            except Exception as e:
+                return RTResult().failure(RTError(
+                    self.pos_start, self.pos_end,
+                    "Can't delete that file",
+                    exec_ctx
+                ))
+        else:
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "File does not exist",
+                exec_ctx
+            ))
+        
+        return RTResult().success(Null())
+    execute_deleteFile.arg_names = [("file_name", False)]  
+
+    def execute_object_set(self, exec_ctx):
+        obj = self.this
+        key = exec_ctx.symbol_table.get("key")
+        value = exec_ctx.symbol_table.get("value")
+
+        if not isinstance(key, String):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "First argument (key) must be a string",
+                exec_ctx
+            ))
+
+        first_letter = True
+        err = False
+        for i in key.value:
+            if first_letter and i in DIGITS:
+                err = True
+                break
+            if i not in LETTERS_DIGITS + "_":
+                err = True
+                break
+            first_letter = False
+
+        if err: 
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "First argument (key) is invalid",
+                exec_ctx
+            ))
+
+        obj.elements[key.value] = value
+
+        return RTResult().success(obj)
+    execute_object_set.arg_names = [("key", False), ("value", False)]
+
+    def execute_object_get(self, exec_ctx):
+        obj = self.this
+        key = exec_ctx.symbol_table.get("key")
+        default = exec_ctx.symbol_table.get("default", None)
+
+        if not isinstance(key, String):
+            return RTResult().failure(RTError(
+                self.pos_start, self.pos_end,
+                "First argument (key) must be a string",
+                exec_ctx
+            ))
+
+        return RTResult().success(obj.elements.get(key.value, Null() if not default else default))
+    execute_object_get.arg_names = [("key", False), ("default", True)]
 
 BuiltInFunction.print = BuiltInFunction("print")
 BuiltInFunction.input = BuiltInFunction("input")
@@ -231,24 +522,34 @@ BuiltInFunction.string = BuiltInFunction("String")
 BuiltInFunction.number = BuiltInFunction("Number")
 BuiltInFunction.boolean = BuiltInFunction("Boolean")
 BuiltInFunction.len = BuiltInFunction("len")
+BuiltInFunction.read_file = BuiltInFunction("readFile")
+BuiltInFunction.write_file = BuiltInFunction("writeFile")
+BuiltInFunction.delete_file = BuiltInFunction("deleteFile")
 
 global_math = Object({
     "pi": Number(math.pi),
     "inf": Number(math.inf)
 })
 
+global_File = Object({
+    "readFile": BuiltInFunction.read_file,
+    "writeFile": BuiltInFunction.write_file,
+    "deleteFile": BuiltInFunction.delete_file
+})
+
 global_vars = {
-    "math": global_math,
+    "Math": global_math,
+    "Files": global_File,
     "print": BuiltInFunction.print,
     "input": BuiltInFunction.input,
-    "input_int": BuiltInFunction.input_int,
+    "inputInt": BuiltInFunction.input_int,
     "clear": BuiltInFunction.clear,
-    "is_number": BuiltInFunction.is_number,
-    "is_string": BuiltInFunction.is_string,
-    "is_boolean": BuiltInFunction.is_boolean,
-    "is_null": BuiltInFunction.is_null,
-    "is_list": BuiltInFunction.is_list,
-    "is_function": BuiltInFunction.is_function,
+    "isNumber": BuiltInFunction.is_number,
+    "isString": BuiltInFunction.is_string,
+    "isBoolean": BuiltInFunction.is_boolean,
+    "isNull": BuiltInFunction.is_null,
+    "isList": BuiltInFunction.is_list,
+    "isFunction": BuiltInFunction.is_function,
     "String": BuiltInFunction.string,
     "Number": BuiltInFunction.number,
     "Boolean": BuiltInFunction.boolean,

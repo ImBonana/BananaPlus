@@ -31,7 +31,6 @@ from src.interpreter import Interpreter
 from src.errors import Context
 from src.symbol_table import SymbolTable
 import src.built_in as built_in
-import src.types as types
 
 global_symbol_table = SymbolTable()
 
@@ -55,7 +54,7 @@ def run(fn, text):
     
     return result.value, result.error
 
-def import_lib(fn, text):
+def import_lib(fn, text, context):
     lexer = Lexer(fn, text)
     tokens, error = lexer.make_tokens()
     if error: return None, None, error
@@ -66,14 +65,16 @@ def import_lib(fn, text):
 
     interpreter = Interpreter()
 
-    context = Context('<program>')
-    lib_symbol_table = SymbolTable()
+    from src.position import Position
 
-    built_in.register_var(lib_symbol_table)
+    new_context = Context(f"<Import '{fn}'>", context, Position(-1, 0, -1, fn, text))
+    lib_symbol_table = SymbolTable(new_context.parent.symbol_table)
 
-    context.symbol_table = lib_symbol_table
 
-    result = interpreter.visit(ast.node, context)
+
+    new_context.symbol_table = lib_symbol_table
+
+    result = interpreter.visit(ast.node, new_context)
 
     return lib_symbol_table, result.value, result.error
 

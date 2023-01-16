@@ -9,6 +9,10 @@ class ParseResult:
     def register_advancement(self):
         self.last_registered_advance_count = 1
         self.advance_count += 1
+    
+    def register_deadvancement(self):
+        self.last_registered_advance_count = 0
+        self.advance_count -= 1
 
     def register(self, res):
         self.last_registered_advance_count = res.advance_count

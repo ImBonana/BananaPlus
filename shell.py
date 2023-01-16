@@ -1,7 +1,7 @@
 import BananaPlus
 
 while True:
-    text = input("BananaLang> ")
+    text = input("BananaPlus> ")
     if text.strip() == "": continue
     result, error = BananaPlus.run("<console>", text)
 
