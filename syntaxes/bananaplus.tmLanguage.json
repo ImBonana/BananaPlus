@@ -13,9 +13,6 @@
 			"include": "#keywords"
 		},
 		{
-			"include": "#d_strings"
-		},
-		{
 			"include": "#strings"
 		},
 		{
@@ -49,45 +46,63 @@
 			]
 		},
 		"keywords": {
-			"patterns": [{
-				"name": "keyword.operator.arithmetic.js",
-				"match": "\\b(then|end|if|elif|else|while|for|step|to|break|return|continue|switch|case|default|let|import|as|func|public|private|list|obj|in)\\b"
-			}]
-		},
-		"d_strings": {
-			"name": "string.quoted.double.bananaplus",
-			"begin": "\"",
-			"end": "\"",
 			"patterns": [
 				{
-					"name": "constant.character.escape.bananaplus",
-					"match": "\\\\."
+					"name": "keyword.other",
+					"match": "\\b(or|and|not)\\b"
+				},
+				{
+					"name": "keyword.control",
+					"match": "\\b(if|elif|else|while|for|step|to|switch|case|then|end|break|return|continue|default)\\b"
+				},
+				{
+					"name": "keyword.other",
+					"match": "\\b(list|obj|in|as)\\b"
+				},
+				{
+					"name": "storage.type",
+					"match": "\\b(func|import|let)\\b"
+				},
+				{
+					"name": "storage.modifier",
+					"match": "\\b(public|private)\\b"
 				}
 			]
 		},
 		"strings": {
-			"name": "string.quoted.double.bananaplus",
-			"begin": "'",
-			"end": "'",
 			"patterns": [
 				{
-					"name": "constant.character.escape.bananaplus",
-					"match": "\\\\."
+					"name": "string.quoted.single",
+					"begin": "'",
+					"end": "'",
+					"patterns": [
+						{
+							"match": "\\\\.",
+							"name": "constant.character.escape"
+						}
+					]	
+				},
+				{
+					"name": "string.quoted.double",
+					"begin": "\"",
+					"end": "\"",
+					"patterns": [
+						{
+							"match": "\\\\.",
+							"name": "constant.character.escape"
+						}
+					]
 				}
 			]
 		},
 		"logic": {
 			"patterns": [
 				{
-					"name": "keyword.operator.comparison.bananaplus",
-					"match": "\\b(or|and|not)\\b"
-				},
-				{
 					"name": "entity.name.type",
 					"match": "(<|<=|!=|==|>=|>|=>)"
 				},
 				{
-					"name": "entity.other.attribute-name",
+					"name": "constant.language",
 					"match": "\\b(true|false|null)\\b"
 				}
 			]
